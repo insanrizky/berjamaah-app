@@ -1,9 +1,9 @@
 'use client';
 
-import { Heart, Shield } from 'lucide-react';
 import UserMenu from './user-menu';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 
 export default function Header() {
   const pathname = usePathname();
@@ -19,8 +19,14 @@ export default function Header() {
             {!isAdminRoute && (
               <Link href='/'>
                 <div className='flex items-center gap-2 cursor-pointer'>
-                  <div className='w-6 h-6 rounded-full flex items-center justify-center bg-green-500'>
-                    <Heart className='w-4 h-4 text-white fill-white' />
+                  <div className='w-6 h-6 rounded-full flex items-center justify-center bg-green-500 overflow-hidden'>
+                    <Image
+                      src='/logo.png'
+                      alt='Berjamaah Logo'
+                      width={24}
+                      height={24}
+                      className='w-full h-full object-cover'
+                    />
                   </div>
                   <span className='text-lg font-semibold text-gray-900 dark:text-white'>
                     Berjamaah POSKU Bandung
@@ -33,8 +39,14 @@ export default function Header() {
             {isAdminRoute && (
               <Link href='/admin/home'>
                 <div className='flex items-center gap-2 cursor-pointer'>
-                  <div className='w-6 h-6 rounded-full flex items-center justify-center bg-blue-500'>
-                    <Shield className='w-4 h-4 text-white fill-white' />
+                  <div className='w-6 h-6 rounded-full flex items-center justify-center bg-blue-500 overflow-hidden'>
+                    <Image
+                      src='/logo.png'
+                      alt='Berjamaah Logo'
+                      width={24}
+                      height={24}
+                      className='w-full h-full object-cover'
+                    />
                   </div>
                   <span className='text-lg font-semibold text-gray-900 dark:text-white'>
                     Admin Portal

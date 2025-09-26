@@ -61,13 +61,12 @@ export default function SignInForm() {
     } else if (result?.ok) {
       toast.success('Berhasil masuk');
       const session = await getSession();
-      console.log('debug session', session);
-      console.log('router', router);
+
       // Check if user is admin and redirect accordingly
       if (session?.user?.role === 'admin') {
-        return router.push('/admin/home');
+        router.push('/admin/home');
       } else {
-        return router.push('/');
+        window.location.href = '/';
       }
     }
   };
