@@ -22,7 +22,7 @@ type ForgotPasswordEmailProps = {
 };
 
 export function ForgotPasswordEmail({
-  appName = 'Berjamaah',
+  appName = 'Berjamaah POSKU Bandung',
   logoUrl = `${process.env.NEXT_PUBLIC_SERVER_URL || ''}/favicon.ico`,
   resetUrl,
   supportEmail = 'support@berjamaah.id',

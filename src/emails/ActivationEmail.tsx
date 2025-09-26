@@ -18,15 +18,15 @@ type ActivationEmailProps = {
   logoUrl?: string;
   activationUrl: string;
   userName?: string;
-  supportEmail?: string;
+  supportWhatsApp?: string;
 };
 
 export function ActivationEmail({
-  appName = 'Berjamaah',
+  appName = 'Berjamaah POSKU Bandung',
   logoUrl = `${process.env.NEXT_PUBLIC_SERVER_URL || ''}/favicon.ico`,
   activationUrl,
   userName,
-  supportEmail = 'support@berjamaah.id',
+  supportWhatsApp = '+62 812‑2121‑9646',
 }: ActivationEmailProps) {
   const preview = `Selamat datang di ${appName}. Aktifkan akun Anda untuk mulai menggunakan aplikasi.`;
 
@@ -78,9 +78,12 @@ export function ActivationEmail({
           {/* Footer */}
           <Section style={styles.footer}>
             <Text style={styles.footerText}>
-              Butuh bantuan? Hubungi kami di{' '}
-              <a href={`mailto:${supportEmail}`} style={styles.footerLink}>
-                {supportEmail}
+              Butuh bantuan? Hubungi kami di WhatsApp{' '}
+              <a
+                href={`https://wa.me/${supportWhatsApp.replace(/[^0-9]/g, '')}`}
+                style={styles.footerLink}
+              >
+                {supportWhatsApp}
               </a>
             </Text>
             <Text style={styles.copyright}>

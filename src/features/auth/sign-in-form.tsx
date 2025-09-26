@@ -81,7 +81,9 @@ export default function SignInForm() {
         <CardTitle className='text-2xl font-bold'>
           Selamat Datang Kembali
         </CardTitle>
-        <CardDescription>Masuk ke akun donor Berjamaah Anda</CardDescription>
+        <CardDescription>
+          Masuk ke akun donor Berjamaah POSKU Bandung Anda
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>

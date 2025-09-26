@@ -28,7 +28,7 @@ export default function Header() {
                 )}
               </div>
               <h1 className='text-lg font-semibold text-gray-900 dark:text-white'>
-                {isAdminRoute ? 'Admin Portal' : 'Berjamaah.id'}
+                {isAdminRoute ? 'Admin Portal' : 'Berjamaah POSKU Bandung'}
               </h1>
             </div>
           </Link>

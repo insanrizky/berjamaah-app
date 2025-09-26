@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Berjamaah App',
-  description: 'Berjamaah App',
+  title: 'Berjamaah POSKU Bandung',
+  description: 'Berjamaah POSKU Bandung',
 };
 
 export default function RootLayout({

@@ -654,7 +654,7 @@ async function sendActivationEmail(email: string, activationUrl: string) {
   }
 
   const resend = new Resend(apiKey);
-  const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Berjamaah';
+  const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Berjamaah POSKU Bandung';
   const logoUrl =
     process.env.NEXT_PUBLIC_LOGO_URL ||
     `${process.env.NEXT_PUBLIC_SERVER_URL || ''}/favicon.ico`;
@@ -662,7 +662,7 @@ async function sendActivationEmail(email: string, activationUrl: string) {
   const { error } = await resend.emails.send({
     from,
     to: email,
-    subject: 'Aktivasi Akun Berjamaah',
+    subject: 'Aktivasi Akun Berjamaah POSKU Bandung',
     react: ActivationEmail({
       appName,
       logoUrl,
@@ -687,7 +687,7 @@ async function sendPasswordResetEmail(email: string, resetUrl: string) {
   }
 
   const resend = new Resend(apiKey);
-  const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Berjamaah';
+  const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Berjamaah POSKU Bandung';
   const logoUrl =
     process.env.NEXT_PUBLIC_LOGO_URL ||
     `${process.env.NEXT_PUBLIC_SERVER_URL || ''}/favicon.ico`;
@@ -695,7 +695,7 @@ async function sendPasswordResetEmail(email: string, resetUrl: string) {
   const { error } = await resend.emails.send({
     from,
     to: email,
-    subject: 'Reset Password - Berjamaah',
+    subject: 'Reset Password - Berjamaah POSKU Bandung',
     react: ForgotPasswordEmail({
       appName,
       logoUrl,

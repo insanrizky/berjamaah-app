@@ -5,7 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail, Calendar, LogOut, Shield } from 'lucide-react';
+import {
+  User,
+  Mail,
+  Calendar,
+  LogOut,
+  Shield,
+  MessageCircle,
+  Phone,
+} from 'lucide-react';
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
@@ -92,6 +100,35 @@ export default function ProfilePage() {
               <p className='text-sm text-gray-600 dark:text-gray-400'>
                 {new Date(userStats.memberSince).toLocaleDateString('id-ID')}
               </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Pusat Bantuan */}
+      <Card className='border border-gray-200 dark:border-gray-700 shadow-sm'>
+        <CardHeader>
+          <CardTitle className='text-base flex items-center gap-2'>
+            <MessageCircle className='w-5 h-5 text-blue-600' />
+            Pusat Bantuan
+          </CardTitle>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          <div className='bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg'>
+            <p className='text-sm text-gray-700 dark:text-gray-300 mb-3'>
+              Jika ada masalah atau pertanyaan, silakan hubungi admin kami
+              melalui WhatsApp:
+            </p>
+            <div className='flex items-center gap-3'>
+              <Phone className='w-5 h-5 text-green-600' />
+              <a
+                href='https://wa.me/6281221219646'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-green-600 hover:text-green-700 font-medium text-sm'
+              >
+                +62 812‑2121‑9646
+              </a>
             </div>
           </div>
         </CardContent>

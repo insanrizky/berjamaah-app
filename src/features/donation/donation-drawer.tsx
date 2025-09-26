@@ -292,10 +292,26 @@ export function DonationDrawer({
       description: 'Transfer ke rekening bank',
       icon: CreditCard,
       banks: [
-        { name: 'BCA', account: '1234567890', holder: 'Yayasan Berjamaah' },
-        { name: 'Mandiri', account: '0987654321', holder: 'Yayasan Berjamaah' },
-        { name: 'BNI', account: '1122334455', holder: 'Yayasan Berjamaah' },
-        { name: 'BRI', account: '5544332211', holder: 'Yayasan Berjamaah' },
+        {
+          name: 'BCA',
+          account: '1234567890',
+          holder: 'Yayasan Berjamaah POSKU Bandung',
+        },
+        {
+          name: 'Mandiri',
+          account: '0987654321',
+          holder: 'Yayasan Berjamaah POSKU Bandung',
+        },
+        {
+          name: 'BNI',
+          account: '1122334455',
+          holder: 'Yayasan Berjamaah POSKU Bandung',
+        },
+        {
+          name: 'BRI',
+          account: '5544332211',
+          holder: 'Yayasan Berjamaah POSKU Bandung',
+        },
       ],
     },
     {
