@@ -22,6 +22,8 @@ export async function POST(request: NextRequest) {
           some: {
             endDate: {
               lte: currentDate,
+              // Exclude 1970-01-01 dates which represent forever-active programs
+              gt: new Date('1970-01-01'),
             },
           },
         },
@@ -88,6 +90,8 @@ export async function GET() {
           some: {
             endDate: {
               lte: currentDate,
+              // Exclude 1970-01-01 dates which represent forever-active programs
+              gt: new Date('1970-01-01'),
             },
           },
         },
