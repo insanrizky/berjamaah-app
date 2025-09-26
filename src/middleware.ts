@@ -11,12 +11,12 @@ export default withAuth(
 
     // Check if user is trying to access admin routes
     if (pathname.startsWith('/admin') && token?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/signin', req.url));
+      return NextResponse.redirect(new URL('/signin'));
     }
 
     // Check if user has token and trying to access signin page then redirect to home
     if (pathname.startsWith('/signin') && !!token) {
-      return NextResponse.redirect(new URL('/', req.url));
+      return NextResponse.redirect(new URL('/'));
     }
 
     return res;
