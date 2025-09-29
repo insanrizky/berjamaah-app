@@ -87,12 +87,6 @@ function CompleteRegistrationForm() {
         });
       }
 
-      if (errorMessage.includes('Username sudah digunakan')) {
-        form.setError('username', {
-          type: 'manual',
-          message: 'Username sudah digunakan',
-        });
-      }
 
       // Show general error toast if no specific field errors
       if (!errorMessage.includes('sudah digunakan')) {

@@ -128,13 +128,13 @@ export function UserCard({ user, onUserUpdate }: UserCardProps) {
         <div className='flex items-start justify-between'>
           <div className='flex items-center space-x-3'>
             <div className='w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg'>
-              {(user.name || user.fullName || user.email)
+              {(user.fullName || user.email)
                 .charAt(0)
                 .toUpperCase()}
             </div>
             <div>
               <h3 className='font-semibold text-gray-900 dark:text-white'>
-                {user.name || user.fullName || 'No Name'}
+                {user.fullName || 'No Name'}
               </h3>
               <div className='flex items-center gap-2 mt-1'>
                 <Badge className={getStatusColor(user.status)}>
@@ -144,7 +144,7 @@ export function UserCard({ user, onUserUpdate }: UserCardProps) {
               </div>
             </div>
           </div>
-          {(user.name !== 'Admin User' ||
+          {(user.fullName !== 'Admin Berjamaah' ||
             user.email !== session?.user.email) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -222,7 +222,7 @@ export function UserCard({ user, onUserUpdate }: UserCardProps) {
             <AlertDialogTitle>Jadikan Pengguna Admin</AlertDialogTitle>
             <AlertDialogDescription>
               Apakah Anda yakin ingin menjadikan{' '}
-              <strong>{user.name || user.fullName || user.email}</strong>{' '}
+              <strong>{user.fullName || user.email}</strong>{' '}
               sebagai admin? Ini akan memberikan mereka hak akses administratif
               penuh.
             </AlertDialogDescription>
@@ -248,7 +248,7 @@ export function UserCard({ user, onUserUpdate }: UserCardProps) {
             <AlertDialogTitle>Jadikan Admin User</AlertDialogTitle>
             <AlertDialogDescription>
               Apakah Anda yakin ingin menjadikan{' '}
-              <strong>{user.name || user.fullName || user.email}</strong>{' '}
+              <strong>{user.fullName || user.email}</strong>{' '}
               sebagai user biasa? Ini akan menghapus hak akses administratif
               mereka.
             </AlertDialogDescription>
@@ -274,7 +274,7 @@ export function UserCard({ user, onUserUpdate }: UserCardProps) {
             <AlertDialogTitle>Kirim Ulang Email Aktivasi</AlertDialogTitle>
             <AlertDialogDescription>
               Apakah Anda yakin ingin mengirim ulang email aktivasi kepada{' '}
-              <strong>{user.name || user.fullName || user.email}</strong>? Email
+              <strong>{user.fullName || user.email}</strong>? Email
               aktivasi baru akan dikirim dan token sebelumnya akan diganti.
             </AlertDialogDescription>
           </AlertDialogHeader>

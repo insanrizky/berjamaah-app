@@ -10,7 +10,7 @@ interface CacheItem<T> {
 }
 
 class SimpleCache {
-  private cache = new Map<string, CacheItem<any>>();
+  private cache = new Map<string, CacheItem<unknown>>();
 
   set<T>(key: string, data: T, ttlSeconds: number = 300): void {
     this.cache.set(key, {
@@ -69,7 +69,7 @@ class SimpleCache {
     let expired = 0;
     let active = 0;
 
-    for (const [key, item] of this.cache.entries()) {
+    for (const [, item] of this.cache.entries()) {
       const isExpired = now - item.timestamp > item.ttl;
       if (isExpired) {
         expired++;

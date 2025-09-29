@@ -19,7 +19,7 @@ import { X } from 'lucide-react';
 import { CreateUserData } from '../types';
 
 const createUserSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
+  fullName: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   role: z.enum(['admin', 'user']),
@@ -49,7 +49,7 @@ export function CreateUserForm({
   } = useForm<CreateUserData>({
     resolver: zodResolver(createUserSchema),
     defaultValues: {
-      name: '',
+      fullName: '',
       email: '',
       password: '',
       role: 'user',
@@ -91,15 +91,15 @@ export function CreateUserForm({
         <CardContent>
           <form onSubmit={handleSubmit(handleFormSubmit)} className='space-y-4'>
             <div className='space-y-2'>
-              <Label htmlFor='name'>Full Name</Label>
+              <Label htmlFor='fullName'>Full Name</Label>
               <Input
-                id='name'
-                {...register('name')}
+                id='fullName'
+                {...register('fullName')}
                 placeholder='Enter full name'
-                className={errors.name ? 'border-red-500' : ''}
+                className={errors.fullName ? 'border-red-500' : ''}
               />
-              {errors.name && (
-                <p className='text-sm text-red-500'>{errors.name.message}</p>
+              {errors.fullName && (
+                <p className='text-sm text-red-500'>{errors.fullName.message}</p>
               )}
             </div>
 

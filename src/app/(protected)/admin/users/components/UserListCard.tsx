@@ -42,13 +42,9 @@ import { useSession } from 'next-auth/react';
 // Types for user data
 interface User {
   id: string;
-  name: string | null;
   email: string;
   fullName: string | null;
-  firstName: string | null;
-  lastName: string | null;
   phone: string | null;
-  image: string | null;
   role: string;
   status: string;
   createdAt: string;
@@ -236,7 +232,7 @@ export function UserListCard({
                       <div className='flex items-center gap-2 mb-1'>
                         <User className='w-4 h-4 text-gray-400' />
                         <CardDataTitle className='text-base font-semibold text-gray-900 dark:text-white truncate'>
-                          {user.name || user.fullName || user.email}
+                          {user.fullName || user.email}
                         </CardDataTitle>
                       </div>
                       <CardDataDescription className='text-sm text-gray-600 dark:text-gray-400 line-clamp-1 mt-1'>
@@ -256,7 +252,7 @@ export function UserListCard({
                           {getRoleText(user.role)}
                         </Badge>
                         {/* Admin Actions Dropdown */}
-                        {(user.name !== 'Admin User' ||
+                        {(user.fullName !== 'Admin Berjamaah' ||
                           user.email !== session?.user?.email) && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -345,8 +341,7 @@ export function UserListCard({
             <AlertDialogDescription>
               Apakah Anda yakin ingin menjadikan{' '}
               <strong>
-                {selectedUser?.name ||
-                  selectedUser?.fullName ||
+                {selectedUser?.fullName ||
                   selectedUser?.email}
               </strong>{' '}
               sebagai admin? Ini akan memberikan mereka hak akses administratif
@@ -372,8 +367,7 @@ export function UserListCard({
             <AlertDialogDescription>
               Apakah Anda yakin ingin menjadikan{' '}
               <strong>
-                {selectedUser?.name ||
-                  selectedUser?.fullName ||
+                {selectedUser?.fullName ||
                   selectedUser?.email}
               </strong>{' '}
               sebagai user biasa? Ini akan menghapus hak akses administratif
@@ -399,8 +393,7 @@ export function UserListCard({
             <AlertDialogDescription>
               Apakah Anda yakin ingin mengirim ulang email aktivasi kepada{' '}
               <strong>
-                {selectedUser?.name ||
-                  selectedUser?.fullName ||
+                {selectedUser?.fullName ||
                   selectedUser?.email}
               </strong>
               ? Email aktivasi baru akan dikirim dan token sebelumnya akan

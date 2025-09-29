@@ -1,12 +1,8 @@
 export interface User {
   id: string;
-  name: string | null;
   email: string;
   fullName: string | null;
-  firstName: string | null;
-  lastName: string | null;
   phone: string | null;
-  image: string | null;
   role: string;
   status: 'scheduled' | 'pending' | 'active';
   createdAt: string; // Serialized date from tRPC
@@ -22,7 +18,7 @@ export interface UserFilters extends Record<string, unknown> {
 }
 
 export interface CreateUserData {
-  name: string;
+  fullName: string;
   email: string;
   password: string;
   role: 'admin' | 'user';
