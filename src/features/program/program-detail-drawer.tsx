@@ -539,7 +539,7 @@ export function ProgramDetailDrawer({
               <AlertDialogHeader>
                 <AlertDialogTitle>Hapus Program</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Apakah Anda yakin ingin menghapus program "{program?.title}"?
+                  Apakah Anda yakin ingin menghapus program &quot;{program?.title}&quot;?
                   Tindakan ini tidak dapat dibatalkan dan akan menghapus semua
                   data program termasuk periode dan donasi yang terkait.
                 </AlertDialogDescription>
