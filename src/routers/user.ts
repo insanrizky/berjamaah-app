@@ -213,11 +213,8 @@ export const userRouter = router({
       // Search filter
       if (search) {
         where.OR = [
-          { name: { contains: search, mode: 'insensitive' } },
           { email: { contains: search, mode: 'insensitive' } },
           { fullName: { contains: search, mode: 'insensitive' } },
-          { firstName: { contains: search, mode: 'insensitive' } },
-          { lastName: { contains: search, mode: 'insensitive' } },
         ];
       }
 
@@ -371,7 +368,6 @@ export const userRouter = router({
         },
         select: {
           id: true,
-          name: true,
           email: true,
           fullName: true,
           role: true,
@@ -402,7 +398,6 @@ export const userRouter = router({
           id: true,
           email: true,
           status: true,
-          name: true,
           fullName: true,
         },
       });

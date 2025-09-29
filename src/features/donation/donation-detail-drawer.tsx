@@ -64,7 +64,7 @@ export interface DonationDetail {
   donationProofImage?: string | null;
   verifiedByAdmin: {
     id: string;
-    name: string;
+    fullName: string;
     email: string;
   } | null;
 }
@@ -126,7 +126,7 @@ export function DonationDetailDrawer({
         verifiedByAdmin: donationData.verifiedByAdmin
           ? {
               ...donationData.verifiedByAdmin,
-              name: donationData.verifiedByAdmin.name || 'Unknown',
+              fullName: donationData.verifiedByAdmin.fullName || 'Unknown',
             }
           : null,
       }

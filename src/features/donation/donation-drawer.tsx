@@ -145,7 +145,7 @@ export function DonationDrawer({
     resolver: zodResolver(donationSchema),
     defaultValues: {
       amount: '',
-      donorName: session?.user?.name || '',
+      donorName: session?.user?.fullName || '',
       donorEmail: session?.user?.email || '',
       donorPhone: '',
       paymentMethod: 'bank_transfer',

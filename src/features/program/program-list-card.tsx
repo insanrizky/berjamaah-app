@@ -40,9 +40,7 @@ interface Program {
     totalCycles?: number | null;
     nextActivationDate?: string | null;
   }>;
-  _count: {
-    donations: number;
-  };
+  // _count removed - using totalDonationCount instead
   progressPercentage: number;
   totalRaisedAmount: number;
   totalDonationCount: number;

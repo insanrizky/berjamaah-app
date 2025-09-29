@@ -36,10 +36,7 @@ interface Program {
   createdBy: string;
   createdByUser?: {
     id: string;
-    name: string | null;
     fullName: string | null;
-    firstName: string | null;
-    lastName: string | null;
   } | null;
   programPeriods: Array<{
     id: string;
@@ -229,15 +226,9 @@ export function ProgramDetailDrawer({
   const getCreatorDisplayName = (program: Program) => {
     if (!program.createdByUser) return 'Tidak diketahui';
 
-    const { name, fullName, firstName, lastName } = program.createdByUser;
+    const { fullName } = program.createdByUser;
 
-    // Priority: fullName > name > firstName + lastName > firstName > 'Tidak diketahui'
-    if (fullName) return fullName;
-    if (name) return name;
-    if (firstName && lastName) return `${firstName} ${lastName}`;
-    if (firstName) return firstName;
-
-    return 'Tidak diketahui';
+    return fullName || 'Tidak diketahui';
   };
 
   if (!isOpen) return null;

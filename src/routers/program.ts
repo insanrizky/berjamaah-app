@@ -236,10 +236,7 @@ export const programRouter = router({
               createdByUser: {
                 select: {
                   id: true,
-                  name: true,
                   fullName: true,
-                  firstName: true,
-                  lastName: true,
                 },
               },
               _count: {

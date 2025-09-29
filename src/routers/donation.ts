@@ -101,7 +101,7 @@ export const donationRouter = router({
             verifiedByAdmin: {
               select: {
                 id: true,
-                name: true,
+                fullName: true,
                 email: true,
               },
             },
@@ -600,7 +600,7 @@ export const donationRouter = router({
             verifiedByAdmin: {
               select: {
                 id: true,
-                name: true,
+                fullName: true,
                 email: true,
               },
             },
@@ -704,7 +704,7 @@ export const donationRouter = router({
             verifiedByAdmin: {
               select: {
                 id: true,
-                name: true,
+                fullName: true,
                 email: true,
               },
             },
