@@ -60,7 +60,7 @@ export interface AdminDonationDetail {
   } | null;
   verifiedByAdmin?: {
     id: string;
-    name?: string | null;
+    fullName?: string | null;
     email: string;
   } | null;
 }
@@ -404,7 +404,7 @@ export function AdminDonationDetailDrawer({
                     <User className='w-4 h-4 text-gray-500' />
                     <div>
                       <p className='text-sm font-medium text-gray-900'>
-                        {donation.verifiedByAdmin.name ||
+                        {donation.verifiedByAdmin.fullName ||
                           donation.verifiedByAdmin.email}
                       </p>
                       <p className='text-xs text-gray-500'>

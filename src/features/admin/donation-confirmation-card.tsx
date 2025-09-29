@@ -42,7 +42,7 @@ interface DonationConfirmationCardProps {
     } | null;
     verifiedByAdmin?: {
       id: string;
-      name?: string | null;
+      fullName?: string | null;
       email: string;
     } | null;
   };
@@ -316,7 +316,7 @@ export function DonationConfirmationCard({
             {donation.verifiedByAdmin && (
               <div className='text-xs text-gray-500 pt-2 border-t border-gray-100'>
                 Diverifikasi oleh:{' '}
-                {donation.verifiedByAdmin.name ||
+                {donation.verifiedByAdmin.fullName ||
                   donation.verifiedByAdmin.email}
               </div>
             )}

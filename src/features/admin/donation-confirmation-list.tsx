@@ -38,7 +38,7 @@ interface DonationData {
   } | null;
   verifiedByAdmin?: {
     id: string;
-    name?: string | null;
+    fullName?: string | null;
     email: string;
   } | null;
 }

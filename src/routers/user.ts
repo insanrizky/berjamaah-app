@@ -91,13 +91,9 @@ export const userRouter = router({
       where: { id: ctx.session.user.id },
       select: {
         id: true,
-        name: true,
         email: true,
-        firstName: true,
-        lastName: true,
+        fullName: true,
         phone: true,
-        bio: true,
-        image: true,
         role: true,
       },
     });
@@ -113,31 +109,23 @@ export const userRouter = router({
   updateProfile: protectedProcedure
     .input(
       z.object({
-        firstName: z.string().optional(),
-        lastName: z.string().optional(),
+        fullName: z.string().optional(),
         phone: z.string().optional(),
-        bio: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const user = await prisma.user.update({
         where: { id: ctx.session.user.id },
         data: {
-          firstName: input.firstName,
-          lastName: input.lastName,
+          fullName: input.fullName,
           phone: input.phone,
-          bio: input.bio,
           updatedAt: new Date(),
         },
         select: {
           id: true,
-          name: true,
           email: true,
-          firstName: true,
-          lastName: true,
+          fullName: true,
           phone: true,
-          bio: true,
-          image: true,
           role: true,
         },
       });
@@ -158,13 +146,9 @@ export const userRouter = router({
         where: { id: input.id },
         select: {
           id: true,
-          name: true,
           email: true,
-          firstName: true,
-          lastName: true,
+          fullName: true,
           phone: true,
-          bio: true,
-          image: true,
           role: true,
           createdAt: true,
           updatedAt: true,
@@ -253,13 +237,9 @@ export const userRouter = router({
           where,
           select: {
             id: true,
-            name: true,
             email: true,
             fullName: true,
-            firstName: true,
-            lastName: true,
             phone: true,
-            image: true,
             role: true,
             status: true,
             createdAt: true,
@@ -297,7 +277,6 @@ export const userRouter = router({
         .object({
           token: z.string().min(10),
           uniqueId: z.string().min(3),
-          username: z.string().min(3),
           fullName: z.string().min(3),
           dob: z.string(),
           phone: z.string().min(6),
@@ -332,23 +311,13 @@ export const userRouter = router({
       // Check for existing uniqueId and username
       const existingUser = await prisma.user.findFirst({
         where: {
-          OR: [{ uniqueId: input.uniqueId }, { username: input.username }],
+          uniqueId: input.uniqueId,
         },
-        select: { uniqueId: true, username: true },
+        select: { uniqueId: true },
       });
 
       if (existingUser) {
-        const fieldErrors: string[] = [];
-
-        if (existingUser.uniqueId === input.uniqueId) {
-          fieldErrors.push('ID unik sudah digunakan');
-        }
-
-        if (existingUser.username === input.username) {
-          fieldErrors.push('Username sudah digunakan');
-        }
-
-        throw new Error(fieldErrors.join(', '));
+        throw new Error('ID unik sudah digunakan');
       }
 
       const hashedPassword = await hash(input.password, 12);
@@ -357,7 +326,6 @@ export const userRouter = router({
         where: { email },
         data: {
           uniqueId: input.uniqueId,
-          username: input.username,
           fullName: input.fullName,
           phone: input.phone,
           dob: new Date(input.dob),

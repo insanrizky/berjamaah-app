@@ -38,7 +38,6 @@ import { cn } from '@/lib/utils';
 const schema = z
   .object({
     uniqueId: z.string().min(3, { message: 'ID unik minimal 3 karakter' }),
-    username: z.string().min(3, { message: 'Username minimal 3 karakter' }),
     fullName: z.string().min(3, { message: 'Nama lengkap minimal 3 karakter' }),
     dob: z.string().min(1, { message: 'Tanggal lahir harus diisi' }),
     phone: z.string().min(6, { message: 'Nomor HP minimal 6 karakter' }),
@@ -63,7 +62,6 @@ function CompleteRegistrationForm() {
     resolver: zodResolver(schema),
     defaultValues: {
       uniqueId: '',
-      username: '',
       fullName: '',
       dob: '',
       phone: '',
@@ -120,19 +118,6 @@ function CompleteRegistrationForm() {
                   <FormLabel>ID Unik</FormLabel>
                   <FormControl>
                     <Input placeholder='Masukkan ID unik' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              name='username'
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input placeholder='Masukkan username' {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

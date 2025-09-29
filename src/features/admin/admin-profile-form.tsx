@@ -12,10 +12,8 @@ import { trpc } from '@/utils/trpc';
 import { toast } from 'sonner';
 
 const profileSchema = z.object({
-  firstName: z.string().min(1, 'Nama depan harus diisi'),
-  lastName: z.string().min(1, 'Nama belakang harus diisi'),
+  fullName: z.string().min(1, 'Nama lengkap harus diisi'),
   phone: z.string().min(1, 'Nomor telepon harus diisi'),
-  bio: z.string().optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -53,10 +51,8 @@ export function AdminProfileForm() {
   // Prepopulate form when user data is loaded
   useEffect(() => {
     if (userProfile) {
-      setValue('firstName', userProfile.firstName || '');
-      setValue('lastName', userProfile.lastName || '');
+      setValue('fullName', userProfile.fullName || '');
       setValue('phone', userProfile.phone || '');
-      setValue('bio', userProfile.bio || '');
     }
   }, [userProfile, setValue]);
 
@@ -78,21 +74,13 @@ export function AdminProfileForm() {
         {/* Profile Photo */}
         <div className='flex items-center space-x-4'>
           <div className='w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center'>
-            {userProfile?.image ? (
-              <img
-                src={userProfile.image}
-                alt='Profile'
-                className='w-16 h-16 rounded-full object-cover'
-              />
-            ) : (
-              <svg
-                className='w-8 h-8 text-gray-400 dark:text-gray-300'
-                fill='currentColor'
-                viewBox='0 0 20 20'
-              >
-                <path d='M10 0a10 10 0 1 0 10 10A10.011 10.011 0 0 0 10 0Zm0 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 13a8.949 8.949 0 0 1-4.951-1.488A3.987 3.987 0 0 1 9 13h2a3.987 3.987 0 0 1 3.951 3.512A8.949 8.949 0 0 1 10 18Z' />
-              </svg>
-            )}
+            <svg
+              className='w-8 h-8 text-gray-400 dark:text-gray-300'
+              fill='currentColor'
+              viewBox='0 0 20 20'
+            >
+              <path d='M10 0a10 10 0 1 0 10 10A10.011 10.011 0 0 0 10 0Zm0 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 13a8.949 8.949 0 0 1-4.951-1.488A3.987 3.987 0 0 1 9 13h2a3.987 3.987 0 0 1 3.951 3.512A8.949 8.949 0 0 1 10 18Z' />
+            </svg>
           </div>
           <div>
             <p className='text-sm text-gray-600 dark:text-gray-400'>
@@ -108,42 +96,21 @@ export function AdminProfileForm() {
         <div className='space-y-4'>
           <div>
             <Label
-              htmlFor='firstName'
+              htmlFor='fullName'
               className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'
             >
-              Nama Depan
+              Nama Lengkap
             </Label>
             <Input
-              id='firstName'
+              id='fullName'
               type='text'
-              placeholder='Masukkan nama depan Anda'
-              {...register('firstName')}
+              placeholder='Masukkan nama lengkap Anda'
+              {...register('fullName')}
               className='w-full'
             />
-            {errors.firstName && (
+            {errors.fullName && (
               <p className='text-red-500 text-xs mt-1'>
-                {errors.firstName.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <Label
-              htmlFor='lastName'
-              className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'
-            >
-              Nama Belakang
-            </Label>
-            <Input
-              id='lastName'
-              type='text'
-              placeholder='Masukkan nama belakang Anda'
-              {...register('lastName')}
-              className='w-full'
-            />
-            {errors.lastName && (
-              <p className='text-red-500 text-xs mt-1'>
-                {errors.lastName.message}
+                {errors.fullName.message}
               </p>
             )}
           </div>
@@ -166,25 +133,6 @@ export function AdminProfileForm() {
               <p className='text-red-500 text-xs mt-1'>
                 {errors.phone.message}
               </p>
-            )}
-          </div>
-
-          <div>
-            <Label
-              htmlFor='bio'
-              className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'
-            >
-              Bio
-            </Label>
-            <textarea
-              id='bio'
-              rows={3}
-              placeholder='Ceritakan tentang diri Anda...'
-              {...register('bio')}
-              className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm'
-            />
-            {errors.bio && (
-              <p className='text-red-500 text-xs mt-1'>{errors.bio.message}</p>
             )}
           </div>
         </div>

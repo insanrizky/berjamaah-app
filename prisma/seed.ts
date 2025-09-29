@@ -11,7 +11,7 @@ async function main() {
   // Check if admin user already exists
   const existingAdmin = await prisma.user.findFirst({
     where: {
-      OR: [{ email: 'admin@berjamaah.id' }, { role: 'admin' }],
+      OR: [{ email: 'admin@berjamaah.poskubandung.org' }, { role: 'admin' }],
     },
   });
 
@@ -20,63 +20,27 @@ async function main() {
   } else {
     // Create admin user directly with Prisma
     try {
-      const hashedPassword = await hash('admin123!', 12);
+      const hashedPassword = await hash('aman0809!', 12);
 
       const adminUser = await prisma.user.create({
         data: {
-          email: 'admin@berjamaah.id',
+          email: 'admin@berjamaah.poskubandung.org',
           password: hashedPassword,
-          name: 'Admin User',
           role: 'admin',
           status: 'active',
-          fullName: 'Admin User',
+          fullName: 'Admin Berjamaah',
           phone: '081234567890',
-          bio: 'Hari yang indah',
         },
       });
 
       console.log('✅ Admin user created successfully:');
-      console.log('   📧 Email: admin@berjamaah.id');
-      console.log('   🔑 Password: admin123!');
+      console.log('   📧 Email: admin@berjamaah.poskubandung.org');
+      console.log('   🔑 Password: ******');
       console.log('   👑 Role: admin');
       console.log('   🆔 ID:', adminUser.id);
     } catch (error) {
       console.error('❌ Error creating admin user:', error);
     }
-  }
-
-  // Create a sample regular user for testing
-  const existingUser = await prisma.user.findFirst({
-    where: { email: 'user@berjamaah.id' },
-  });
-
-  if (!existingUser) {
-    try {
-      const hashedPassword = await hash('user123!', 12);
-
-      const regularUser = await prisma.user.create({
-        data: {
-          email: 'user@berjamaah.id',
-          password: hashedPassword,
-          name: 'Regular User',
-          role: 'user',
-          status: 'active',
-          fullName: 'Regular User',
-          phone: '081234567890',
-          bio: 'Hari yang',
-        },
-      });
-
-      console.log('✅ Sample user created successfully:');
-      console.log('   📧 Email: user@berjamaah.id');
-      console.log('   🔑 Password: user123!');
-      console.log('   👤 Role: user');
-      console.log('   🆔 ID:', regularUser.id);
-    } catch (error) {
-      console.error('❌ Error creating sample user:', error);
-    }
-  } else {
-    console.log('✅ Sample user already exists:', existingUser.email);
   }
 
   console.log('🎉 Database seeding completed!');

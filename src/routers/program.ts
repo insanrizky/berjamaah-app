@@ -2,6 +2,7 @@ import { TRPCError } from '@trpc/server';
 import z from 'zod';
 import prisma from '../../prisma/index';
 import { protectedProcedure, publicProcedure, router } from '../lib/trpc';
+import { cache, cacheKeys, cacheTTL } from '../lib/cache';
 
 // Validation schemas
 const createProgramSchema = z.object({
@@ -90,21 +91,38 @@ export const programRouter = router({
     )
     .query(async ({ input }) => {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const where: Record<string, any> = {};
+        // Use cache for program list (short TTL due to frequent updates)
+        return await cache.getOrSet(
+          cacheKeys.programList(input.status, input.category, input.offset, input.limit),
+          async () => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const where: Record<string, any> = {};
 
-        if (input.status) {
-          where.status = input.status;
-        }
+            if (input.status) {
+              where.status = input.status;
+            }
 
-        if (input.category) {
-          where.category = input.category;
-        }
+            if (input.category) {
+              where.category = input.category;
+            }
 
+        // Optimized: Single query with aggregation instead of N+1 queries
         const [programs, total] = await Promise.all([
           prisma.program.findMany({
             where,
-            include: {
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              targetAmount: true,
+              bannerImage: true,
+              category: true,
+              status: true,
+              programType: true,
+              contact: true,
+              details: true,
+              createdAt: true,
+              updatedAt: true,
               programPeriods: {
                 select: {
                   id: true,
@@ -116,10 +134,15 @@ export const programRouter = router({
                 orderBy: {
                   startDate: 'desc',
                 },
+                take: 3, // Limit periods for performance
               },
-              _count: {
+              // Get verified donations with aggregation in single query
+              donations: {
+                where: {
+                  status: 'verified',
+                },
                 select: {
-                  donations: true,
+                  amount: true,
                 },
               },
             },
@@ -132,39 +155,36 @@ export const programRouter = router({
           prisma.program.count({ where }),
         ]);
 
-        // Calculate progress percentage for each program
-        const programsWithProgress = await Promise.all(
-          programs.map(async program => {
-            const donationTotals = await prisma.donation.aggregate({
-              where: {
-                programId: program.id,
-                status: 'verified',
-              },
-              _sum: { amount: true },
-              _count: true,
-            });
+        // Calculate progress percentage efficiently (no additional queries)
+        const programsWithProgress = programs.map(program => {
+          const totalRaisedAmount = program.donations.reduce(
+            (sum, donation) => sum + Number(donation.amount),
+            0
+          );
+          const totalDonationCount = program.donations.length;
+          const progressPercentage =
+            Number(program.targetAmount) > 0
+              ? (totalRaisedAmount / Number(program.targetAmount)) * 100
+              : 0;
 
-            const totalRaisedAmount = Number(donationTotals._sum.amount || 0);
-            const totalDonationCount = donationTotals._count;
-            const progressPercentage =
-              program && Number(program.targetAmount) > 0
-                ? (totalRaisedAmount / Number(program.targetAmount)) * 100
-                : 0;
+          return {
+            ...program,
+            totalRaisedAmount,
+            totalDonationCount,
+            progressPercentage,
+            // Remove donations array from response to reduce payload
+            donations: undefined,
+          };
+        });
 
             return {
-              ...program,
-              totalRaisedAmount,
-              totalDonationCount,
-              progressPercentage,
+              programs: programsWithProgress,
+              total,
+              hasMore: input.offset + input.limit < total,
             };
-          })
+          },
+          cacheTTL.SHORT // Cache for 1 minute due to frequent updates
         );
-
-        return {
-          programs: programsWithProgress,
-          total,
-          hasMore: input.offset + input.limit < total,
-        };
       } catch (error) {
         console.error('Error in getAll programs:', error);
 
@@ -1119,13 +1139,17 @@ export const programRouter = router({
   // Additional utility queries
   getProgramStats: publicProcedure.query(async () => {
     try {
-      // Execute all queries in parallel for better performance
-      const [
-        totalActivePrograms,
-        totalEndedPrograms,
-        totalDonators,
-        totalDonationAmount,
-      ] = await Promise.all([
+      // Use cache for expensive stats calculation
+      return await cache.getOrSet(
+        cacheKeys.programStats(),
+        async () => {
+          // Execute all queries in parallel for better performance
+          const [
+            totalActivePrograms,
+            totalEndedPrograms,
+            totalDonators,
+            totalDonationAmount,
+          ] = await Promise.all([
         // Total active programs
         prisma.program.count({
           where: {
@@ -1138,18 +1162,15 @@ export const programRouter = router({
             status: 'ended',
           },
         }),
-        // Total unique donators (users who made verified donations)
+        // Total unique donators (more efficient with groupBy)
         prisma.donation
-          .findMany({
+          .groupBy({
+            by: ['donorEmail'],
             where: {
               status: 'verified',
             },
-            select: {
-              donorEmail: true,
-            },
-            distinct: ['donorEmail'],
           })
-          .then(donations => donations.length),
+          .then(result => result.length),
         // Total amount of verified donations
         prisma.donation.aggregate({
           where: {
@@ -1161,12 +1182,15 @@ export const programRouter = router({
         }),
       ]);
 
-      return {
-        totalActivePrograms,
-        totalEndedPrograms,
-        totalDonators,
-        totalDonationAmount: Number(totalDonationAmount._sum.amount || 0),
-      };
+          return {
+            totalActivePrograms,
+            totalEndedPrograms,
+            totalDonators,
+            totalDonationAmount: Number(totalDonationAmount._sum.amount || 0),
+          };
+        },
+        cacheTTL.MEDIUM // Cache for 5 minutes
+      );
     } catch (error) {
       console.error('Error in getProgramStats:', error);
 

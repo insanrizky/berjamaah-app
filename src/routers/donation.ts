@@ -56,9 +56,6 @@ export const donationRouter = router({
           nextCursor = nextItem!.id;
         }
 
-        console.log('Router - Found donations:', donations.length);
-        console.log('Router - First donation:', donations[0]);
-
         return {
           donations,
           nextCursor,
@@ -170,22 +167,39 @@ export const donationRouter = router({
             status: input.status,
             ...(input.category && { category: input.category }),
           },
-          include: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            targetAmount: true,
+            bannerImage: true,
+            category: true,
+            status: true,
+            programType: true,
+            contact: true,
+            createdAt: true,
             programPeriods: {
               where: {
                 startDate: { lte: new Date() },
                 endDate: { gte: new Date() },
               },
+              select: {
+                id: true,
+                startDate: true,
+                endDate: true,
+                currentAmount: true,
+                cycleNumber: true,
+              },
               orderBy: { startDate: 'desc' },
               take: 1,
             },
+            // Optimized: Only get verified donations with minimal fields
             donations: {
               where: {
-                status: { in: ['verified', 'confirmed'] },
+                status: 'verified',
               },
               select: {
                 amount: true,
-                userId: true,
               },
             },
           },
@@ -468,7 +482,7 @@ export const donationRouter = router({
               verifiedByAdmin: {
                 select: {
                   id: true,
-                  name: true,
+                  fullName: true,
                   email: true,
                 },
               },
