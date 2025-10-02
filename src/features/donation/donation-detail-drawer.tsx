@@ -101,6 +101,10 @@ export function DonationDetailDrawer({
           | 'rejected',
         transferDate: donationData.verifiedAt || null,
         transferReference: null,
+        bankAccountSender: donationData.userBankAccount
+          ? `${donationData.userBankAccount.bankName} - ${donationData.userBankAccount.accountNumber} (${donationData.userBankAccount.accountHolder})`
+          : null,
+        bankAccountReceiver: null,
         adminNotes: null,
         verificationAttempts: 1,
         program: {
