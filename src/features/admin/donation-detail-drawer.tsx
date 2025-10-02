@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import { useState } from 'react';
@@ -37,8 +38,6 @@ export interface AdminDonationDetail {
   donorPhone?: string | null;
   amount: number | string;
   paymentMethod?: string | null;
-  bankAccountSender?: string | null;
-  bankAccountReceiver?: string | null;
   donationReferenceNumber: string;
   donationProofImage?: string | null;
   status: string;
@@ -63,6 +62,12 @@ export interface AdminDonationDetail {
     fullName?: string | null;
     email: string;
   } | null;
+  userBankAccount?: {
+    id: string;
+    bankName: string;
+    accountNumber: string;
+    accountHolder: string;
+  } | null;
 }
 
 interface AdminDonationDetailDrawerProps {
@@ -72,6 +77,9 @@ interface AdminDonationDetailDrawerProps {
   onVerify?: (donationId: string) => void;
   onReject?: (donationId: string) => void;
   onConfirm?: (donationId: string) => void;
+  isVerifying?: boolean;
+  isRejecting?: boolean;
+  isConfirming?: boolean;
 }
 
 export function AdminDonationDetailDrawer({
@@ -81,6 +89,9 @@ export function AdminDonationDetailDrawer({
   onVerify,
   onReject,
   onConfirm,
+  isVerifying = false,
+  isRejecting = false,
+  isConfirming = false,
 }: AdminDonationDetailDrawerProps) {
   const [imageError, setImageError] = useState(false);
 
@@ -176,7 +187,7 @@ export function AdminDonationDetailDrawer({
 
           <div className='space-y-6 overflow-y-auto flex-1 min-h-0 pr-2'>
             {/* Donor Information */}
-            <Card>
+            <Card className='gap-0'>
               <CardHeader className='pb-3'>
                 <CardTitle className='text-sm font-medium flex items-center gap-2'>
                   <User className='w-4 h-4' />
@@ -221,7 +232,7 @@ export function AdminDonationDetailDrawer({
             </Card>
 
             {/* Donation Information */}
-            <Card>
+            <Card className='gap-0'>
               <CardHeader className='pb-3'>
                 <CardTitle className='text-sm font-medium flex items-center gap-2'>
                   <Target className='w-4 h-4' />
@@ -285,17 +296,42 @@ export function AdminDonationDetailDrawer({
                   )}
                 </div>
 
-                {donation.bankAccountSender && (
+                {donation.userBankAccount && (
                   <div className='pt-3 border-t border-gray-100'>
-                    <div className='flex items-center gap-3'>
-                      <Building2 className='w-4 h-4 text-gray-500' />
-                      <div>
-                        <p className='text-sm font-medium text-gray-900'>
-                          {donation.bankAccountSender}
-                        </p>
-                        <p className='text-xs text-gray-500'>
-                          Rekening Pengirim
-                        </p>
+                    <p className='text-xs text-gray-500 mb-2 font-medium'>
+                      Rekening Pengirim
+                    </p>
+                    <div className='space-y-2'>
+                      <div className='flex items-center gap-3'>
+                        <Building2 className='w-4 h-4 text-gray-500' />
+                        <div>
+                          <p className='text-sm font-medium text-gray-900'>
+                            {donation.userBankAccount.bankName}
+                          </p>
+                          <p className='text-xs text-gray-500'>Nama Bank</p>
+                        </div>
+                      </div>
+                      <div className='flex items-center gap-3'>
+                        <CreditCard className='w-4 h-4 text-gray-500' />
+                        <div>
+                          <p className='text-sm font-medium text-gray-900'>
+                            {donation.userBankAccount.accountNumber}
+                          </p>
+                          <p className='text-xs text-gray-500'>
+                            Nomor Rekening
+                          </p>
+                        </div>
+                      </div>
+                      <div className='flex items-center gap-3'>
+                        <User className='w-4 h-4 text-gray-500' />
+                        <div>
+                          <p className='text-sm font-medium text-gray-900'>
+                            {donation.userBankAccount.accountHolder}
+                          </p>
+                          <p className='text-xs text-gray-500'>
+                            Nama Pemilik Rekening
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -304,7 +340,7 @@ export function AdminDonationDetailDrawer({
             </Card>
 
             {/* Program Information */}
-            <Card>
+            <Card className='gap-0'>
               <CardHeader className='pb-3'>
                 <CardTitle className='text-sm font-medium flex items-center gap-2'>
                   <Target className='w-4 h-4' />
@@ -345,7 +381,7 @@ export function AdminDonationDetailDrawer({
 
             {/* Payment Proof */}
             {donation.donationProofImage && (
-              <Card>
+              <Card className='gap-0'>
                 <CardHeader className='pb-3'>
                   <CardTitle className='text-sm font-medium flex items-center gap-2'>
                     <ImageIcon className='w-4 h-4' />
@@ -392,7 +428,7 @@ export function AdminDonationDetailDrawer({
 
             {/* Verification Information */}
             {donation.verifiedByAdmin && (
-              <Card>
+              <Card className='gap-0'>
                 <CardHeader className='pb-3'>
                   <CardTitle className='text-sm font-medium flex items-center gap-2'>
                     <Shield className='w-4 h-4' />
@@ -429,20 +465,22 @@ export function AdminDonationDetailDrawer({
                   {onVerify && (
                     <Button
                       onClick={() => onVerify(donation.id)}
+                      disabled={isVerifying || isRejecting}
                       className='flex-1 bg-green-500 hover:bg-green-600'
                     >
                       <CheckCircle className='w-4 h-4 mr-2' />
-                      Verifikasi
+                      {isVerifying ? 'Memverifikasi...' : 'Verifikasi'}
                     </Button>
                   )}
                   {onReject && (
                     <Button
                       onClick={() => onReject(donation.id)}
+                      disabled={isVerifying || isRejecting}
                       variant='outline'
                       className='flex-1 border-red-200 text-red-700 hover:bg-red-50'
                     >
                       <XCircle className='w-4 h-4 mr-2' />
-                      Tolak
+                      {isRejecting ? 'Menolak...' : 'Tolak'}
                     </Button>
                   )}
                 </>
@@ -451,10 +489,11 @@ export function AdminDonationDetailDrawer({
               {donation.status === 'verified' && onConfirm && (
                 <Button
                   onClick={() => onConfirm(donation.id)}
+                  disabled={isConfirming}
                   className='flex-1 bg-blue-500 hover:bg-blue-600'
                 >
                   <CheckCircle className='w-4 h-4 mr-2' />
-                  Konfirmasi
+                  {isConfirming ? 'Mengkonfirmasi...' : 'Konfirmasi'}
                 </Button>
               )}
             </div>

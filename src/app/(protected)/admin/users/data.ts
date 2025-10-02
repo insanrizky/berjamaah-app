@@ -1,12 +1,12 @@
 export const USER_STATUS_OPTIONS = [
-  { value: 'all', label: 'All Status' },
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
-  { value: 'pending', label: 'Pending' },
+  { value: 'all', label: 'Semua Status' },
+  { value: 'scheduled', label: 'Terjadwal' },
+  { value: 'pending', label: 'Menunggu' },
+  { value: 'active', label: 'Aktif' },
 ];
 
 export const USER_ROLE_OPTIONS = [
-  { value: 'all', label: 'All Roles' },
+  { value: 'all', label: 'Semua Peran' },
   { value: 'admin', label: 'Admin' },
-  { value: 'user', label: 'User' },
+  { value: 'user', label: 'Pengguna' },
 ];

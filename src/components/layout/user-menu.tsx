@@ -83,8 +83,10 @@ export default function UserMenu() {
             <User className='w-4 h-4 text-white' />
           </div>
           <div className='flex flex-col'>
-            <span className='font-medium'>{session.user.fullName || 'User'}</span>
-            <span className='text-xs text-muted-foreground'>
+            <span className='font-medium'>
+              {session.user.fullName || 'User'}
+            </span>
+            <span className='text-xs text-muted-foreground truncate max-w-[170px]'>
               {session.user.email}
             </span>
           </div>

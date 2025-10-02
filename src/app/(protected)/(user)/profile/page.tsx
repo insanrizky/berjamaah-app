@@ -14,6 +14,7 @@ import {
   MessageCircle,
   Phone,
 } from 'lucide-react';
+import { trpc } from '@/utils/trpc';
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
@@ -45,6 +46,7 @@ export default function ProfilePage() {
       console.error('Error signing out:', error);
     }
   };
+  const { data, isLoading } = trpc.user.getProfile.useQuery();
 
   return (
     <div className='space-y-6 px-4'>
@@ -57,11 +59,9 @@ export default function ProfilePage() {
             </div>
             <div className='flex-1'>
               <h2 className='text-lg font-semibold text-gray-900 dark:text-white'>
-                {session?.user?.fullName || 'User'}
+                {isLoading ? 'Loading...' : data?.fullName}
               </h2>
-              <p className='text-sm text-gray-600 dark:text-gray-400'>
-                {session?.user?.email}
-              </p>
+
               <Badge variant='outline' className='mt-1 text-xs'>
                 <Shield className='w-3 h-3 mr-1' />
                 {session?.user?.role || 'user'}

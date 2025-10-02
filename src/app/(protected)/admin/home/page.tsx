@@ -97,7 +97,7 @@ export default function AdminDashboard() {
         <div className='flex items-center justify-between'>
           <div>
             <h1 className='text-lg font-semibold text-gray-900 dark:text-white'>
-              Dashboard Admin
+              Beranda Admin
             </h1>
             <p className='text-sm text-gray-600 dark:text-gray-400'>
               Kelola pengguna dan pengaturan sistem

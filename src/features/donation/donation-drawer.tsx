@@ -30,10 +30,8 @@ import {
   CheckCircle,
   Copy,
   Info,
-  Building2,
   X,
 } from 'lucide-react';
-import { useSession } from '@/lib/auth-client';
 import { trpc } from '@/utils/trpc';
 import { formatPeriodText } from '@/lib/period-utils';
 
@@ -70,8 +68,8 @@ export function DonationDrawer({
   const [donationAmount, setDonationAmount] = useState('');
   const [currentStep, setCurrentStep] = useState<WizardStep>('amount');
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
-    useState<string>('');
-  const [selectedBank, setSelectedBank] = useState<string>('');
+    useState<string>('bank_transfer');
+  const [selectedBank, setSelectedBank] = useState<string>('BSI');
   const [selectedDigitalWallet, setSelectedDigitalWallet] =
     useState<string>('');
   // Single preview mode; no list of files
@@ -79,13 +77,18 @@ export function DonationDrawer({
   const [proofUrl, setProofUrl] = useState<string>('');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedBankAccountId, setSelectedBankAccountId] = useState<
+    string | null
+  >(null);
+  const [saveBankAccount, setSaveBankAccount] = useState(false);
   const utils = trpc.useContext();
   const createDonation = trpc.donation.createDonation.useMutation({
     onSuccess: async () => {
       await utils.invalidate();
     },
   });
-  const { data: session } = useSession();
+  const { data: profileData } = trpc.user.getProfile.useQuery();
+  const { data: savedBankAccounts } = trpc.user.getBankAccounts.useQuery();
 
   const donationSchema = useMemo(
     () =>
@@ -97,12 +100,10 @@ export function DonationDrawer({
             .refine(v => !isNaN(Number(v)) && Number(v) > 0, {
               message: 'Jumlah tidak valid',
             }),
-          donorName: z.string().min(1, { message: 'Nama wajib diisi' }),
-          donorEmail: z.string().email({ message: 'Email tidak valid' }),
-          donorPhone: z.string().optional(),
           paymentMethod: z.enum(['bank_transfer', 'digital_wallet', 'qris']),
-          bankAccountSender: z.string().optional(),
-          bankAccountReceiver: z.string().optional(),
+          senderBankName: z.string().optional(),
+          senderAccountNumber: z.string().optional(),
+          senderAccountHolder: z.string().optional(),
           transferDate: z.string().optional(),
           donationProofImage: z.string().url('URL bukti tidak valid'),
         })
@@ -115,15 +116,35 @@ export function DonationDrawer({
                 path: ['paymentMethod'],
               });
             }
-            if (
-              !data.bankAccountSender ||
-              data.bankAccountSender.trim() === ''
-            ) {
-              ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: 'Rekening pengirim wajib diisi',
-                path: ['bankAccountSender'],
-              });
+            // Only validate if no saved account is selected
+            if (!selectedBankAccountId) {
+              if (!data.senderBankName || data.senderBankName.trim() === '') {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.custom,
+                  message: 'Nama bank pengirim wajib diisi',
+                  path: ['senderBankName'],
+                });
+              }
+              if (
+                !data.senderAccountNumber ||
+                data.senderAccountNumber.trim() === ''
+              ) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.custom,
+                  message: 'Nomor rekening pengirim wajib diisi',
+                  path: ['senderAccountNumber'],
+                });
+              }
+              if (
+                !data.senderAccountHolder ||
+                data.senderAccountHolder.trim() === ''
+              ) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.custom,
+                  message: 'Nama pemilik rekening wajib diisi',
+                  path: ['senderAccountHolder'],
+                });
+              }
             }
           }
           if (
@@ -137,7 +158,7 @@ export function DonationDrawer({
             });
           }
         }),
-    [selectedBank, selectedDigitalWallet]
+    [selectedBank, selectedDigitalWallet, selectedBankAccountId]
   );
 
   type DonationFormValues = z.infer<typeof donationSchema>;
@@ -145,12 +166,10 @@ export function DonationDrawer({
     resolver: zodResolver(donationSchema),
     defaultValues: {
       amount: '',
-      donorName: session?.user?.fullName || '',
-      donorEmail: session?.user?.email || '',
-      donorPhone: '',
       paymentMethod: 'bank_transfer',
-      bankAccountSender: '',
-      bankAccountReceiver: '',
+      senderBankName: '',
+      senderAccountNumber: '',
+      senderAccountHolder: '',
       transferDate: '',
       donationProofImage: '',
     },
@@ -184,11 +203,33 @@ export function DonationDrawer({
 
     // Validate specific payment method selections
     if (selectedPaymentMethod === 'bank_transfer') {
-      const sender = getValues('bankAccountSender');
-      if (!selectedBank || !sender || sender.trim() === '') {
-        // trigger validation messages to show
-        setValue('bankAccountSender', sender || '', { shouldValidate: true });
+      if (!selectedBank) {
         return;
+      }
+
+      // Only validate bank details if no saved account is selected
+      if (!selectedBankAccountId) {
+        const bankName = getValues('senderBankName');
+        const accountNumber = getValues('senderAccountNumber');
+        const accountHolder = getValues('senderAccountHolder');
+        if (
+          !bankName ||
+          bankName.trim() === '' ||
+          !accountNumber ||
+          accountNumber.trim() === '' ||
+          !accountHolder ||
+          accountHolder.trim() === ''
+        ) {
+          // trigger validation messages to show
+          setValue('senderBankName', bankName || '', { shouldValidate: true });
+          setValue('senderAccountNumber', accountNumber || '', {
+            shouldValidate: true,
+          });
+          setValue('senderAccountHolder', accountHolder || '', {
+            shouldValidate: true,
+          });
+          return;
+        }
       }
     }
     if (selectedPaymentMethod === 'digital_wallet' && !selectedDigitalWallet)
@@ -203,17 +244,53 @@ export function DonationDrawer({
     );
     setCurrentStep('upload');
   };
+
+  const handleSelectSavedBankAccount = (accountId: string) => {
+    const account = savedBankAccounts?.find(
+      (acc: {
+        id: string;
+        bankName: string;
+        accountNumber: string;
+        accountHolder: string;
+      }) => acc.id === accountId
+    );
+    if (account) {
+      setValue('senderBankName', account.bankName, { shouldValidate: true });
+      setValue('senderAccountNumber', account.accountNumber, {
+        shouldValidate: true,
+      });
+      setValue('senderAccountHolder', account.accountHolder, {
+        shouldValidate: true,
+      });
+      setSelectedBankAccountId(accountId);
+      clearErrors([
+        'senderBankName',
+        'senderAccountNumber',
+        'senderAccountHolder',
+      ]);
+    }
+  };
+
+  const handleClearBankAccountSelection = () => {
+    setSelectedBankAccountId(null);
+    setValue('senderBankName', '', { shouldValidate: true });
+    setValue('senderAccountNumber', '', { shouldValidate: true });
+    setValue('senderAccountHolder', '', { shouldValidate: true });
+  };
   const handleDonationSubmit = async (values: DonationFormValues) => {
     if (!program) return;
     await createDonation.mutateAsync({
       programId: program.id,
       amount: Number(values.amount) * 1000,
-      donorName: values.donorName,
-      donorEmail: values.donorEmail,
-      donorPhone: values.donorPhone,
+      donorName: profileData?.fullName || '',
+      donorEmail: profileData?.email || '',
+      donorPhone: profileData?.phone || '',
       paymentMethod: values.paymentMethod,
-      bankAccountSender: values.bankAccountSender,
-      bankAccountReceiver: values.bankAccountReceiver,
+      userBankAccountId: selectedBankAccountId || undefined,
+      senderBankName: values.senderBankName,
+      senderAccountNumber: values.senderAccountNumber,
+      senderAccountHolder: values.senderAccountHolder,
+      saveBankAccount: saveBankAccount,
       donationProofImage: values.donationProofImage,
       // transferDate left optional
     });
@@ -225,8 +302,13 @@ export function DonationDrawer({
     // Reset all state
     setDonationAmount('');
     setCurrentStep('amount');
-    setSelectedPaymentMethod('');
+    setSelectedPaymentMethod('bank_transfer');
+    setSelectedBank('BSI');
+    setSelectedDigitalWallet('');
     setUploadedFileName('');
+    setProofUrl('');
+    setSelectedBankAccountId(null);
+    setSaveBankAccount(false);
     onClose();
   };
 
@@ -293,24 +375,9 @@ export function DonationDrawer({
       icon: CreditCard,
       banks: [
         {
-          name: 'BCA',
-          account: '1234567890',
-          holder: 'Yayasan Berjamaah POSKU Bandung',
-        },
-        {
-          name: 'Mandiri',
-          account: '0987654321',
-          holder: 'Yayasan Berjamaah POSKU Bandung',
-        },
-        {
-          name: 'BNI',
-          account: '1122334455',
-          holder: 'Yayasan Berjamaah POSKU Bandung',
-        },
-        {
-          name: 'BRI',
-          account: '5544332211',
-          holder: 'Yayasan Berjamaah POSKU Bandung',
+          name: 'BSI',
+          account: '4442344440 ',
+          holder: 'a.n Alfatih Pilar Peradaban',
         },
       ],
     },
@@ -477,46 +544,11 @@ export function DonationDrawer({
               {/* Step 2: Payment Method Selection */}
               {currentStep === 'payment' && (
                 <div className='space-y-4'>
-                  <div className='text-sm text-gray-600 dark:text-gray-400'>
+                  {/* <div className='text-sm text-gray-600 dark:text-gray-400'>
                     Pilih metode pembayaran yang Anda inginkan
-                  </div>
+                  </div> */}
 
-                  {/* Donor Info */}
-                  <div className='grid grid-cols-1 gap-3'>
-                    <div>
-                      <Label className='text-sm font-medium'>Nama</Label>
-                      <Input
-                        placeholder='Nama lengkap'
-                        {...register('donorName')}
-                      />
-                      {formState.errors.donorName && (
-                        <p className='text-xs text-red-500 mt-1'>
-                          {formState.errors.donorName.message}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <Label className='text-sm font-medium'>Email</Label>
-                      <Input
-                        placeholder='email@contoh.com'
-                        {...register('donorEmail')}
-                      />
-                      {formState.errors.donorEmail && (
-                        <p className='text-xs text-red-500 mt-1'>
-                          {formState.errors.donorEmail.message}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <Label className='text-sm font-medium'>No. Telepon</Label>
-                      <Input
-                        placeholder='08xxxxxxxxxx'
-                        {...register('donorPhone')}
-                      />
-                    </div>
-                  </div>
-
-                  <div className='grid grid-cols-3 gap-3'>
+                  {/* <div className='grid grid-cols-3 gap-3'>
                     {paymentMethods.map(method => (
                       <Card
                         key={method.id}
@@ -542,20 +574,13 @@ export function DonationDrawer({
                         </CardContent>
                       </Card>
                     ))}
-                  </div>
+                  </div> */}
 
                   {/* Bank Transfer Details */}
                   {selectedPaymentMethod === 'bank_transfer' && (
                     <div className='space-y-3'>
-                      <Alert>
-                        <Info className='h-4 w-4' />
-                        <AlertDescription>
-                          Pilih bank tujuan untuk melihat informasi rekening
-                        </AlertDescription>
-                      </Alert>
-
                       <div className='space-y-2'>
-                        <Label className='text-sm font-medium'>
+                        {/* <Label className='text-sm font-medium'>
                           Pilih Bank:
                         </Label>
                         <div className='grid grid-cols-2 gap-2'>
@@ -577,13 +602,13 @@ export function DonationDrawer({
                               </Button>
                             )
                           )}
-                        </div>
+                        </div> */}
                       </div>
 
                       {selectedBank && (
-                        <Card className='bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800'>
-                          <CardContent className='p-4'>
-                            <h4 className='font-semibold text-green-800 dark:text-green-200 mb-3'>
+                        <Card className='bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 py-0'>
+                          <CardContent className='p-4 py-4'>
+                            <h4 className='font-semibold text-green-800 dark:text-green-200'>
                               Informasi Rekening
                             </h4>
                             {getSelectedPaymentMethod()
@@ -639,21 +664,157 @@ export function DonationDrawer({
                                       ).toLocaleString('id-ID')}
                                     </span>
                                   </div>
-                                  <div className='mt-3'>
+                                  <div className='mt-3 space-y-3'>
                                     <Label className='text-sm font-medium'>
                                       Rekening Pengirim
                                     </Label>
-                                    <Input
-                                      placeholder='Nama Bank - No.Rekening - Nama'
-                                      {...register('bankAccountSender')}
-                                    />
-                                    {formState.errors.bankAccountSender && (
-                                      <p className='text-xs text-red-500 mt-1'>
-                                        {
-                                          formState.errors.bankAccountSender
-                                            .message
-                                        }
-                                      </p>
+
+                                    {/* Saved Bank Accounts */}
+                                    {savedBankAccounts &&
+                                      savedBankAccounts.length > 0 && (
+                                        <div className='space-y-2'>
+                                          <Label className='text-xs text-gray-500'>
+                                            Gunakan Rekening Tersimpan:
+                                          </Label>
+                                          <div className='space-y-2'>
+                                            {savedBankAccounts.map(
+                                              (account: {
+                                                id: string;
+                                                bankName: string;
+                                                accountNumber: string;
+                                                accountHolder: string;
+                                              }) => (
+                                                <div
+                                                  key={account.id}
+                                                  className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                                                    selectedBankAccountId ===
+                                                    account.id
+                                                      ? 'border-green-500 bg-green-50 dark:bg-green-950'
+                                                      : 'border-gray-200 hover:border-green-300'
+                                                  }`}
+                                                  onClick={() =>
+                                                    handleSelectSavedBankAccount(
+                                                      account.id
+                                                    )
+                                                  }
+                                                >
+                                                  <div className='flex items-start justify-between'>
+                                                    <div className='flex-1'>
+                                                      <div className='font-medium text-sm'>
+                                                        {account.bankName}
+                                                      </div>
+                                                      <div className='text-xs text-gray-600 dark:text-gray-400 mt-1'>
+                                                        {account.accountNumber}{' '}
+                                                        -{' '}
+                                                        {account.accountHolder}
+                                                      </div>
+                                                    </div>
+                                                    {selectedBankAccountId ===
+                                                      account.id && (
+                                                      <CheckCircle className='w-4 h-4 text-green-600 flex-shrink-0' />
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              )
+                                            )}
+                                          </div>
+                                          {selectedBankAccountId && (
+                                            <Button
+                                              type='button'
+                                              variant='outline'
+                                              size='sm'
+                                              onClick={
+                                                handleClearBankAccountSelection
+                                              }
+                                              className='w-full text-xs'
+                                            >
+                                              Gunakan Rekening Baru
+                                            </Button>
+                                          )}
+                                        </div>
+                                      )}
+
+                                    {/* Manual Entry Fields */}
+                                    {(!selectedBankAccountId ||
+                                      !savedBankAccounts ||
+                                      savedBankAccounts.length === 0) && (
+                                      <>
+                                        <div>
+                                          <Label className='text-xs'>
+                                            Nama Bank
+                                          </Label>
+                                          <Input
+                                            placeholder='Contoh: BCA, BRI, Mandiri'
+                                            {...register('senderBankName')}
+                                          />
+                                          {formState.errors.senderBankName && (
+                                            <p className='text-xs text-red-500 mt-1'>
+                                              {
+                                                formState.errors.senderBankName
+                                                  .message
+                                              }
+                                            </p>
+                                          )}
+                                        </div>
+                                        <div>
+                                          <Label className='text-xs'>
+                                            Nomor Rekening
+                                          </Label>
+                                          <Input
+                                            placeholder='Masukkan nomor rekening'
+                                            {...register('senderAccountNumber')}
+                                          />
+                                          {formState.errors
+                                            .senderAccountNumber && (
+                                            <p className='text-xs text-red-500 mt-1'>
+                                              {
+                                                formState.errors
+                                                  .senderAccountNumber.message
+                                              }
+                                            </p>
+                                          )}
+                                        </div>
+                                        <div>
+                                          <Label className='text-xs'>
+                                            Nama Pemilik Rekening
+                                          </Label>
+                                          <Input
+                                            placeholder='Nama sesuai rekening'
+                                            {...register('senderAccountHolder')}
+                                          />
+                                          {formState.errors
+                                            .senderAccountHolder && (
+                                            <p className='text-xs text-red-500 mt-1'>
+                                              {
+                                                formState.errors
+                                                  .senderAccountHolder.message
+                                              }
+                                            </p>
+                                          )}
+                                        </div>
+
+                                        {/* Save Bank Account Checkbox */}
+                                        <div className='flex items-center gap-2 pt-2'>
+                                          <input
+                                            type='checkbox'
+                                            id='saveBankAccount'
+                                            checked={saveBankAccount}
+                                            onChange={e =>
+                                              setSaveBankAccount(
+                                                e.target.checked
+                                              )
+                                            }
+                                            className='h-4 w-4 rounded border-gray-300'
+                                          />
+                                          <Label
+                                            htmlFor='saveBankAccount'
+                                            className='text-xs cursor-pointer'
+                                          >
+                                            Simpan rekening ini untuk donasi
+                                            berikutnya
+                                          </Label>
+                                        </div>
+                                      </>
                                     )}
                                   </div>
                                 </div>
@@ -973,6 +1134,7 @@ export function DonationDrawer({
                       form='donation-form'
                       className='w-full'
                       disabled={!proofUrl || createDonation.isPending}
+                      loading={createDonation.isPending}
                       onClick={handleSubmit(handleDonationSubmit)}
                     >
                       <HandCoins className='w-4 h-4 mr-2' />

@@ -40,7 +40,7 @@ export default function BottomNavigationAdmin() {
                 : 'text-gray-500 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-500'
             }`}
           >
-            Home
+            Beranda
           </span>
         </Link>
 
@@ -104,7 +104,7 @@ export default function BottomNavigationAdmin() {
                 : 'text-gray-500 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-500'
             }`}
           >
-            Users
+            Pengguna
           </span>
         </Link>
 
@@ -135,7 +135,7 @@ export default function BottomNavigationAdmin() {
                 : 'text-gray-500 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-500'
             }`}
           >
-            Profile
+            Profil
           </span>
         </Link>
       </div>

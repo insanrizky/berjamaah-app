@@ -21,8 +21,6 @@ interface DonationConfirmationCardProps {
     donorPhone?: string | null;
     amount: number | string;
     paymentMethod?: string | null;
-    bankAccountSender?: string | null;
-    bankAccountReceiver?: string | null;
     donationReferenceNumber: string;
     donationProofImage?: string | null;
     status: string;
@@ -45,6 +43,12 @@ interface DonationConfirmationCardProps {
       fullName?: string | null;
       email: string;
     } | null;
+    userBankAccount?: {
+      id: string;
+      bankName: string;
+      accountNumber: string;
+      accountHolder: string;
+    } | null;
   };
   onStatusChange?: () => void;
 }
@@ -55,9 +59,13 @@ export function DonationConfirmationCard({
 }: DonationConfirmationCardProps) {
   const trpcClient = useTRPCClient();
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const handleVerify = useCallback(async () => {
     try {
+      setIsVerifying(true);
       await trpcClient.donation.verifyDonation.mutate({
         donationId: donation.id,
         action: 'verify',
@@ -68,11 +76,14 @@ export function DonationConfirmationCard({
     } catch (error) {
       console.error('Error verifying donation:', error);
       toast.error('Gagal memverifikasi donasi');
+    } finally {
+      setIsVerifying(false);
     }
   }, [donation.id, trpcClient, onStatusChange]);
 
   const handleReject = useCallback(async () => {
     try {
+      setIsRejecting(true);
       await trpcClient.donation.verifyDonation.mutate({
         donationId: donation.id,
         action: 'reject',
@@ -83,11 +94,14 @@ export function DonationConfirmationCard({
     } catch (error) {
       console.error('Error rejecting donation:', error);
       toast.error('Gagal menolak donasi');
+    } finally {
+      setIsRejecting(false);
     }
   }, [donation.id, trpcClient, onStatusChange]);
 
   const handleConfirm = useCallback(async () => {
     try {
+      setIsConfirming(true);
       await trpcClient.donation.confirmDonation.mutate({
         donationId: donation.id,
       });
@@ -98,12 +112,15 @@ export function DonationConfirmationCard({
     } catch (error) {
       console.error('Error confirming donation:', error);
       toast.error('Gagal mengkonfirmasi donasi');
+    } finally {
+      setIsConfirming(false);
     }
   }, [donation.id, trpcClient, onStatusChange]);
 
   const handleVerifyFromDrawer = useCallback(
     async (donationId: string) => {
       try {
+        setIsVerifying(true);
         await trpcClient.donation.verifyDonation.mutate({
           donationId,
           action: 'verify',
@@ -115,6 +132,8 @@ export function DonationConfirmationCard({
       } catch (error) {
         console.error('Error verifying donation:', error);
         toast.error('Gagal memverifikasi donasi');
+      } finally {
+        setIsVerifying(false);
       }
     },
     [trpcClient, onStatusChange]
@@ -123,6 +142,7 @@ export function DonationConfirmationCard({
   const handleRejectFromDrawer = useCallback(
     async (donationId: string) => {
       try {
+        setIsRejecting(true);
         await trpcClient.donation.verifyDonation.mutate({
           donationId,
           action: 'reject',
@@ -134,6 +154,8 @@ export function DonationConfirmationCard({
       } catch (error) {
         console.error('Error rejecting donation:', error);
         toast.error('Gagal menolak donasi');
+      } finally {
+        setIsRejecting(false);
       }
     },
     [trpcClient, onStatusChange]
@@ -142,6 +164,7 @@ export function DonationConfirmationCard({
   const handleConfirmFromDrawer = useCallback(
     async (donationId: string) => {
       try {
+        setIsConfirming(true);
         await trpcClient.donation.confirmDonation.mutate({
           donationId,
         });
@@ -152,6 +175,8 @@ export function DonationConfirmationCard({
       } catch (error) {
         console.error('Error confirming donation:', error);
         toast.error('Gagal mengkonfirmasi donasi');
+      } finally {
+        setIsConfirming(false);
       }
     },
     [trpcClient, onStatusChange]
@@ -261,9 +286,11 @@ export function DonationConfirmationCard({
                 })}
               </div>
 
-              {donation.bankAccountSender && (
+              {donation.userBankAccount && (
                 <div className='text-sm text-gray-600 dark:text-gray-400'>
-                  Dari: {donation.bankAccountSender}
+                  Dari: {donation.userBankAccount.bankName} -{' '}
+                  {donation.userBankAccount.accountNumber} -{' '}
+                  {donation.userBankAccount.accountHolder}
                 </div>
               )}
             </div>
@@ -274,19 +301,21 @@ export function DonationConfirmationCard({
                   <Button
                     size='sm'
                     onClick={handleVerify}
+                    disabled={isVerifying || isRejecting}
                     className='text-xs px-3 py-1 h-auto bg-green-500 hover:bg-green-600'
                   >
                     <CheckCircle className='w-3 h-3 mr-1' />
-                    Verifikasi
+                    {isVerifying ? 'Memverifikasi...' : 'Verifikasi'}
                   </Button>
                   <Button
                     size='sm'
                     onClick={handleReject}
+                    disabled={isVerifying || isRejecting}
                     variant='outline'
                     className='text-xs px-3 py-1 h-auto border-red-200 text-red-700 hover:bg-red-50'
                   >
                     <XCircle className='w-3 h-3 mr-1' />
-                    Tolak
+                    {isRejecting ? 'Menolak...' : 'Tolak'}
                   </Button>
                 </>
               )}
@@ -295,10 +324,11 @@ export function DonationConfirmationCard({
                 <Button
                   size='sm'
                   onClick={handleConfirm}
+                  disabled={isConfirming}
                   className='text-xs px-3 py-1 h-auto bg-blue-500 hover:bg-blue-600'
                 >
                   <CheckCircle className='w-3 h-3 mr-1' />
-                  Konfirmasi
+                  {isConfirming ? 'Mengkonfirmasi...' : 'Konfirmasi'}
                 </Button>
               )}
 
@@ -332,6 +362,9 @@ export function DonationConfirmationCard({
         onVerify={handleVerifyFromDrawer}
         onReject={handleRejectFromDrawer}
         onConfirm={handleConfirmFromDrawer}
+        isVerifying={isVerifying}
+        isRejecting={isRejecting}
+        isConfirming={isConfirming}
       />
     </>
   );

@@ -44,8 +44,10 @@ export default function Home() {
         cycleNumber?: number | null;
       }>;
       _count?: { donations?: number };
+      totalDonationCount?: number;
       totalRaisedAmount?: number;
       progressPercentage?: number;
+      createdAt?: string | null;
     }): ProgramCardModel => {
       const latestPeriod =
         Array.isArray(p.programPeriods) && p.programPeriods.length > 0
@@ -78,8 +80,10 @@ export default function Home() {
         endDate: end ? end.toISOString() : new Date().toISOString(),
         status: p.status || 'active',
         bannerImage: p.bannerImage ?? undefined,
+        totalDonationCount: p.totalDonationCount,
         totalRaisedAmount: p.totalRaisedAmount,
         progressPercentage: p.progressPercentage,
+        createdAt: p.createdAt,
       } satisfies ProgramCardModel;
     },
     []

@@ -37,7 +37,7 @@ import { cn } from '@/lib/utils';
 
 const schema = z
   .object({
-    uniqueId: z.string().min(3, { message: 'ID unik minimal 3 karakter' }),
+    uniqueId: z.string().min(3, { message: 'ID SIKAF minimal 3 karakter' }),
     fullName: z.string().min(3, { message: 'Nama lengkap minimal 3 karakter' }),
     dob: z.string().min(1, { message: 'Tanggal lahir harus diisi' }),
     phone: z.string().min(6, { message: 'Nomor HP minimal 6 karakter' }),
@@ -80,13 +80,12 @@ function CompleteRegistrationForm() {
         (error as Error)?.message || 'Gagal menyelesaikan registrasi';
 
       // Check if error contains field-specific messages
-      if (errorMessage.includes('ID unik sudah digunakan')) {
+      if (errorMessage.includes('ID SIKAF sudah digunakan')) {
         form.setError('uniqueId', {
           type: 'manual',
-          message: 'ID unik sudah digunakan',
+          message: 'ID SIKAF sudah digunakan',
         });
       }
-
 
       // Show general error toast if no specific field errors
       if (!errorMessage.includes('sudah digunakan')) {
@@ -109,9 +108,9 @@ function CompleteRegistrationForm() {
               control={form.control}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ID Unik</FormLabel>
+                  <FormLabel>ID SIKAF</FormLabel>
                   <FormControl>
-                    <Input placeholder='Masukkan ID unik' {...field} />
+                    <Input placeholder='Masukkan ID SIKAF' {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

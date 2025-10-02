@@ -35,6 +35,7 @@ import {
   MoreHorizontal,
   UserPlus,
   Send,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
@@ -76,6 +77,7 @@ export function UserListCard({
   const [showAdminDialog, setShowAdminDialog] = useState(false);
   const [showUserDialog, setShowUserDialog] = useState(false);
   const [showResendDialog, setShowResendDialog] = useState(false);
+  const [isResendingActivation, setIsResendingActivation] = useState(false);
 
   const { data: session } = useSession();
 
@@ -91,8 +93,8 @@ export function UserListCard({
             ) + 1,
           limit,
           search: search || undefined,
-          status: status !== 'all' ? status : undefined,
-          role: role !== 'all' ? role : undefined,
+          status: status || 'all',
+          role: role || 'all',
         });
       },
       getNextPageParam: (lastPage, allPages) => {
@@ -145,14 +147,15 @@ export function UserListCard({
 
   const handleResendActivation = async (user: User) => {
     try {
+      setIsResendingActivation(true);
       await trpcClient.user.resendActivationEmail.mutate({
         userId: user.id,
       });
       toast.success('Email aktivasi berhasil dikirim ulang');
-      // Invalidate queries to refresh data
-      window.location.reload(); // Simple refresh for now
     } catch {
       toast.error('Gagal mengirim ulang email aktivasi');
+    } finally {
+      setIsResendingActivation(false);
     }
   };
 
@@ -340,10 +343,7 @@ export function UserListCard({
             <AlertDialogTitle>Jadikan Pengguna Admin</AlertDialogTitle>
             <AlertDialogDescription>
               Apakah Anda yakin ingin menjadikan{' '}
-              <strong>
-                {selectedUser?.fullName ||
-                  selectedUser?.email}
-              </strong>{' '}
+              <strong>{selectedUser?.fullName || selectedUser?.email}</strong>{' '}
               sebagai admin? Ini akan memberikan mereka hak akses administratif
               penuh.
             </AlertDialogDescription>
@@ -366,10 +366,7 @@ export function UserListCard({
             <AlertDialogTitle>Jadikan Admin User</AlertDialogTitle>
             <AlertDialogDescription>
               Apakah Anda yakin ingin menjadikan{' '}
-              <strong>
-                {selectedUser?.fullName ||
-                  selectedUser?.email}
-              </strong>{' '}
+              <strong>{selectedUser?.fullName || selectedUser?.email}</strong>{' '}
               sebagai user biasa? Ini akan menghapus hak akses administratif
               mereka.
             </AlertDialogDescription>
@@ -392,22 +389,29 @@ export function UserListCard({
             <AlertDialogTitle>Kirim Ulang Email Aktivasi</AlertDialogTitle>
             <AlertDialogDescription>
               Apakah Anda yakin ingin mengirim ulang email aktivasi kepada{' '}
-              <strong>
-                {selectedUser?.fullName ||
-                  selectedUser?.email}
-              </strong>
-              ? Email aktivasi baru akan dikirim dan token sebelumnya akan
+              <strong>{selectedUser?.fullName || selectedUser?.email}</strong>?
+              Email aktivasi baru akan dikirim dan token sebelumnya akan
               diganti.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogCancel disabled={isResendingActivation}>
+              Batal
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() =>
                 selectedUser && handleResendActivation(selectedUser)
               }
+              disabled={isResendingActivation}
             >
-              Kirim Email Aktivasi
+              {isResendingActivation ? (
+                <>
+                  <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                  Mengirim...
+                </>
+              ) : (
+                'Kirim Email Aktivasi'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

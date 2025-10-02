@@ -12,7 +12,7 @@ interface SearchInputProps {
 export function SearchInput({
   value,
   onChangeAction,
-  placeholder = 'Search users...',
+  placeholder = 'Cari pengguna...',
 }: SearchInputProps) {
   return (
     <div className='relative'>

@@ -178,7 +178,7 @@ export function ProgramListCard({
                   <div className='mt-3'>
                     <div className='flex justify-between text-xs mb-1'>
                       <span className='text-gray-600 dark:text-gray-400'>
-                        Progress
+                        Perkembangan
                       </span>
                       <span className='text-gray-900 dark:text-white font-medium'>
                         {program.progressPercentage?.toFixed(1)}%

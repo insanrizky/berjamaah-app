@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import React from 'react';
@@ -710,6 +711,7 @@ export default function AddProgramForm() {
             type='submit'
             className='w-full bg-green-600 hover:bg-green-700'
             disabled={form.formState.isSubmitting}
+            loading={form.formState.isSubmitting}
           >
             {form.formState.isSubmitting ? 'Menyimpan...' : 'Simpan Program'}
           </Button>

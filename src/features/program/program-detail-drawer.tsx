@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -332,7 +333,7 @@ export function ProgramDetailDrawer({
       {/* Progress */}
       <div className='space-y-2'>
         <div className='flex justify-between text-sm'>
-          <span className='text-gray-600 dark:text-gray-400'>Progress</span>
+          <span className='text-gray-600 dark:text-gray-400'>Perkembangan</span>
           <span className='text-gray-900 dark:text-white font-medium'>
             {program.progressPercentage?.toFixed(2)}%
           </span>
@@ -539,9 +540,10 @@ export function ProgramDetailDrawer({
               <AlertDialogHeader>
                 <AlertDialogTitle>Hapus Program</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Apakah Anda yakin ingin menghapus program &quot;{program?.title}&quot;?
-                  Tindakan ini tidak dapat dibatalkan dan akan menghapus semua
-                  data program termasuk periode dan donasi yang terkait.
+                  Apakah Anda yakin ingin menghapus program &quot;
+                  {program?.title}&quot;? Tindakan ini tidak dapat dibatalkan
+                  dan akan menghapus semua data program termasuk periode dan
+                  donasi yang terkait.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

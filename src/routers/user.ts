@@ -314,7 +314,7 @@ export const userRouter = router({
       });
 
       if (existingUser) {
-        throw new Error('ID unik sudah digunakan');
+        throw new Error('ID SIKAF sudah digunakan');
       }
 
       const hashedPassword = await hash(input.password, 12);
@@ -592,6 +592,128 @@ export const userRouter = router({
       return {
         success: true,
         message: 'Password reset successfully',
+      };
+    }),
+
+  // Get user bank accounts
+  getBankAccounts: protectedProcedure.query(async ({ ctx }) => {
+    const bankAccounts = await prisma.userBankAccount.findMany({
+      where: {
+        userId: ctx.session.user.id,
+      },
+      orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
+      select: {
+        id: true,
+        bankName: true,
+        accountNumber: true,
+        accountHolder: true,
+        isDefault: true,
+        createdAt: true,
+      },
+    });
+
+    return bankAccounts;
+  }),
+
+  // Save bank account (create or update)
+  saveBankAccount: protectedProcedure
+    .input(
+      z.object({
+        bankName: z.string().min(1, 'Bank name is required'),
+        accountNumber: z.string().min(1, 'Account number is required'),
+        accountHolder: z.string().min(1, 'Account holder name is required'),
+        isDefault: z.boolean().optional().default(false),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // Check if this account already exists
+      const existingAccount = await prisma.userBankAccount.findFirst({
+        where: {
+          userId,
+          accountNumber: input.accountNumber,
+        },
+      });
+
+      if (existingAccount) {
+        // Update existing account
+        const updated = await prisma.userBankAccount.update({
+          where: { id: existingAccount.id },
+          data: {
+            bankName: input.bankName,
+            accountHolder: input.accountHolder,
+            isDefault: input.isDefault,
+            updatedAt: new Date(),
+          },
+        });
+
+        // If this is set as default, unset other defaults
+        if (input.isDefault) {
+          await prisma.userBankAccount.updateMany({
+            where: {
+              userId,
+              id: { not: updated.id },
+            },
+            data: {
+              isDefault: false,
+            },
+          });
+        }
+
+        return updated;
+      }
+
+      // Create new account
+      const newAccount = await prisma.userBankAccount.create({
+        data: {
+          userId,
+          bankName: input.bankName,
+          accountNumber: input.accountNumber,
+          accountHolder: input.accountHolder,
+          isDefault: input.isDefault,
+        },
+      });
+
+      // If this is set as default, unset other defaults
+      if (input.isDefault) {
+        await prisma.userBankAccount.updateMany({
+          where: {
+            userId,
+            id: { not: newAccount.id },
+          },
+          data: {
+            isDefault: false,
+          },
+        });
+      }
+
+      return newAccount;
+    }),
+
+  // Delete bank account
+  deleteBankAccount: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      // Verify the account belongs to the user
+      const account = await prisma.userBankAccount.findFirst({
+        where: {
+          id: input.id,
+          userId: ctx.session.user.id,
+        },
+      });
+
+      if (!account) {
+        throw new Error('Bank account not found');
+      }
+
+      await prisma.userBankAccount.delete({
+        where: { id: input.id },
+      });
+
+      return {
+        success: true,
+        message: 'Bank account deleted successfully',
       };
     }),
 });

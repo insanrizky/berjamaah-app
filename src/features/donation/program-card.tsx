@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import { useState } from 'react';
@@ -8,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Target, Calendar, HandCoins, Users, Clock } from 'lucide-react';
 import { DonationDrawer } from './donation-drawer';
 import { formatPeriodTextForCard } from '@/lib/period-utils';
+import { formatDateForDisplay } from '@/lib/date';
 
 interface Program {
   id: string;
@@ -23,8 +25,10 @@ interface Program {
   startDate?: string | null;
   status: string;
   bannerImage?: string | null;
+  totalDonationCount?: number;
   totalRaisedAmount?: number;
   progressPercentage?: number;
+  createdAt?: string | null;
 }
 
 interface ProgramCardProps {
@@ -142,7 +146,7 @@ export function ProgramCard({ program, onDonationSubmit }: ProgramCardProps) {
               </div>
               <div className='flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400'>
                 <Users className='w-4 h-4' />
-                <span>{program.donorCount} donatur</span>
+                <span>{program.totalDonationCount} donatur</span>
               </div>
               <div className='flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400'>
                 <Calendar className='w-4 h-4' />
@@ -153,7 +157,7 @@ export function ProgramCard({ program, onDonationSubmit }: ProgramCardProps) {
                     program.endDate
                   ).includes('Selalu Aktif')
                     ? `Selesai ${new Date(program.endDate).toLocaleDateString('id-ID')}`
-                    : 'Program Berkelanjutan'}
+                    : formatDateForDisplay(new Date(program?.createdAt ?? ''))}
                 </span>
               </div>
               <div className='flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400'>

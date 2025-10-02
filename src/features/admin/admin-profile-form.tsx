@@ -141,6 +141,7 @@ export function AdminProfileForm() {
         <div className='flex gap-3'>
           <Button
             type='submit'
+            loading={isSubmitting || updateProfileMutation.isPending}
             disabled={isSubmitting || updateProfileMutation.isPending}
             className='flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm'
           >

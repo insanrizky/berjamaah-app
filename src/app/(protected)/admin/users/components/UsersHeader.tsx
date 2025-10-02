@@ -59,7 +59,7 @@ export function UsersHeader({
             </div>
             <div className='ml-4'>
               <p className='text-xs font-medium text-gray-600 dark:text-gray-400'>
-                Total Users
+                Total Pengguna
               </p>
               <p className='text-2xl font-bold text-gray-900 dark:text-white'>
                 {totalUsers}
@@ -87,7 +87,7 @@ export function UsersHeader({
             </div>
             <div className='ml-4'>
               <p className='text-xs font-medium text-gray-600 dark:text-gray-400'>
-                Active Users
+                Pengguna Aktif
               </p>
               <p className='text-2xl font-bold text-gray-900 dark:text-white'>
                 {activeUsers}
@@ -115,7 +115,7 @@ export function UsersHeader({
             </div>
             <div className='ml-4'>
               <p className='text-xs font-medium text-gray-600 dark:text-gray-400'>
-                Pending Users
+                Menunggu konfirmasi
               </p>
               <p className='text-2xl font-bold text-gray-900 dark:text-white'>
                 {pendingUsers}
@@ -143,7 +143,7 @@ export function UsersHeader({
             </div>
             <div className='ml-4'>
               <p className='text-xs font-medium text-gray-600 dark:text-gray-400'>
-                Scheduled Users
+                Pendaftaran
               </p>
               <p className='text-2xl font-bold text-gray-900 dark:text-white'>
                 {scheduledUsers}

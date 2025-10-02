@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash2, Loader2, ChevronLeft } from 'lucide-react';
+import { Plus, Trash2, ChevronLeft } from 'lucide-react';
 import { trpcClient } from '@/utils/trpc';
 
 // Schema for single user email
@@ -246,17 +246,11 @@ export default function AddUsersPage() {
                   <div className='flex gap-3 pt-4'>
                     <Button
                       type='submit'
+                      loading={form.formState.isSubmitting}
                       disabled={form.formState.isSubmitting}
                       className='flex-1'
                     >
-                      {form.formState.isSubmitting ? (
-                        <>
-                          <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                          Membuat Pengguna...
-                        </>
-                      ) : (
-                        'Simpan Pengguna'
-                      )}
+                      Simpan Pengguna
                     </Button>
                   </div>
                 </form>

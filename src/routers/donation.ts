@@ -105,6 +105,14 @@ export const donationRouter = router({
                 email: true,
               },
             },
+            userBankAccount: {
+              select: {
+                id: true,
+                bankName: true,
+                accountNumber: true,
+                accountHolder: true,
+              },
+            },
           },
         });
 
@@ -269,8 +277,11 @@ export const donationRouter = router({
         donorEmail: z.string().email('Valid email is required'),
         donorPhone: z.string().optional(),
         paymentMethod: z.enum(['bank_transfer', 'digital_wallet', 'qris']),
-        bankAccountSender: z.string().optional(),
-        bankAccountReceiver: z.string().optional(),
+        userBankAccountId: z.string().optional(),
+        senderBankName: z.string().optional(),
+        senderAccountNumber: z.string().optional(),
+        senderAccountHolder: z.string().optional(),
+        saveBankAccount: z.boolean().optional().default(false),
         transferDate: z.coerce.date().optional(),
         donationProofImage: z.string().url('Valid image URL is required'),
       })
@@ -292,6 +303,41 @@ export const donationRouter = router({
           });
         }
 
+        let bankAccountId = input.userBankAccountId;
+
+        // If no bank account ID provided but we have bank details, create/find the account
+        if (
+          !bankAccountId &&
+          input.paymentMethod === 'bank_transfer' &&
+          input.senderBankName &&
+          input.senderAccountNumber &&
+          input.senderAccountHolder
+        ) {
+          // Check if account already exists
+          const existingAccount = await prisma.userBankAccount.findFirst({
+            where: {
+              userId: ctx.session.user.id,
+              accountNumber: input.senderAccountNumber,
+            },
+          });
+
+          if (existingAccount) {
+            bankAccountId = existingAccount.id;
+          } else if (input.saveBankAccount) {
+            // Create new bank account record only if user wants to save it
+            const newAccount = await prisma.userBankAccount.create({
+              data: {
+                userId: ctx.session.user.id,
+                bankName: input.senderBankName,
+                accountNumber: input.senderAccountNumber,
+                accountHolder: input.senderAccountHolder,
+                isDefault: false,
+              },
+            });
+            bankAccountId = newAccount.id;
+          }
+        }
+
         // Generate unique donation reference number
         const donationReferenceNumber = `DON-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
@@ -306,8 +352,7 @@ export const donationRouter = router({
             programPeriodId: null,
             amount: input.amount,
             paymentMethod: input.paymentMethod,
-            bankAccountSender: input.bankAccountSender,
-            bankAccountReceiver: input.bankAccountReceiver,
+            userBankAccountId: bankAccountId,
             donationReferenceNumber,
             status: 'pending_verification',
             donationProofImage: input.donationProofImage,
@@ -322,6 +367,14 @@ export const donationRouter = router({
                 category: true,
                 bannerImage: true,
                 targetAmount: true,
+              },
+            },
+            userBankAccount: {
+              select: {
+                id: true,
+                bankName: true,
+                accountNumber: true,
+                accountHolder: true,
               },
             },
           },
@@ -484,6 +537,14 @@ export const donationRouter = router({
                   id: true,
                   fullName: true,
                   email: true,
+                },
+              },
+              userBankAccount: {
+                select: {
+                  id: true,
+                  bankName: true,
+                  accountNumber: true,
+                  accountHolder: true,
                 },
               },
             },

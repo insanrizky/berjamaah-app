@@ -17,22 +17,23 @@ enum UserStatus {
 }
 
 model User {
-  id                String     @id @default(cuid())
-  email             String     @unique
+  id                String            @id @default(cuid())
+  email             String            @unique
   password          String?
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
-  role              String     @default("user")
-  fullName          String?    @map("full_name")
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  role              String            @default("user")
+  fullName          String?           @map("full_name")
   phone             String?
   // Onboarding fields
-  status            UserStatus @default(scheduled)
-  uniqueId          String?    @unique
+  status            UserStatus        @default(scheduled)
+  uniqueId          String?           @unique
   dob               DateTime?
-  verifiedDonations Donation[] @relation("VerifiedByAdmin")
-  approvedPrograms  Program[]  @relation("ApprovedPrograms")
-  rejectedPrograms  Program[]  @relation("RejectedPrograms")
-  createdPrograms   Program[]  @relation("CreatedPrograms")
+  verifiedDonations Donation[]        @relation("VerifiedByAdmin")
+  approvedPrograms  Program[]         @relation("ApprovedPrograms")
+  rejectedPrograms  Program[]         @relation("RejectedPrograms")
+  createdPrograms   Program[]         @relation("CreatedPrograms")
+  bankAccounts      UserBankAccount[]
 
   @@index([status, createdAt])
   @@map("user")
@@ -49,27 +50,27 @@ model Verification {
 }
 
 model Donation {
-  id                      String         @id @default(cuid())
-  userId                  String?        @map("user_id")
-  donorName               String         @map("donor_name")
-  donorEmail              String         @map("donor_email")
-  donorPhone              String?        @map("donor_phone")
-  programId               String         @map("program_id")
-  programPeriodId         String?        @map("program_period_id")
-  verifiedByAdminId       String?        @map("verified_by_admin_id")
-  amount                  Decimal        @db.Decimal(15, 2)
-  status                  String         @default("pending_verification")
-  paymentMethod           String?        @map("payment_method")
-  bankAccountSender       String?        @map("bank_account_sender")
-  bankAccountReceiver     String?        @map("bank_account_receiver")
-  verifiedAt              DateTime?      @map("verified_at")
-  donationReferenceNumber String         @unique @map("donation_reference_number")
-  donationProofImage      String?        @map("donation_proof_image")
-  createdAt               DateTime       @default(now()) @map("created_at")
-  updatedAt               DateTime       @updatedAt @map("updated_at")
-  program                 Program        @relation(fields: [programId], references: [id])
-  programPeriod           ProgramPeriod? @relation(fields: [programPeriodId], references: [id])
-  verifiedByAdmin         User?          @relation("VerifiedByAdmin", fields: [verifiedByAdminId], references: [id])
+  id                      String           @id @default(cuid())
+  userId                  String?          @map("user_id")
+  donorName               String           @map("donor_name")
+  donorEmail              String           @map("donor_email")
+  donorPhone              String?          @map("donor_phone")
+  programId               String           @map("program_id")
+  programPeriodId         String?          @map("program_period_id")
+  verifiedByAdminId       String?          @map("verified_by_admin_id")
+  userBankAccountId       String?          @map("user_bank_account_id")
+  amount                  Decimal          @db.Decimal(15, 2)
+  status                  String           @default("pending_verification")
+  paymentMethod           String?          @map("payment_method")
+  verifiedAt              DateTime?        @map("verified_at")
+  donationReferenceNumber String           @unique @map("donation_reference_number")
+  donationProofImage      String?          @map("donation_proof_image")
+  createdAt               DateTime         @default(now()) @map("created_at")
+  updatedAt               DateTime         @updatedAt @map("updated_at")
+  program                 Program          @relation(fields: [programId], references: [id])
+  programPeriod           ProgramPeriod?   @relation(fields: [programPeriodId], references: [id])
+  verifiedByAdmin         User?            @relation("VerifiedByAdmin", fields: [verifiedByAdminId], references: [id])
+  userBankAccount         UserBankAccount? @relation(fields: [userBankAccountId], references: [id])
 
   @@map("donations")
 }
@@ -120,4 +121,21 @@ model ProgramPeriod {
   program               Program    @relation(fields: [programId], references: [id], onDelete: Cascade)
 
   @@map("program_periods")
+}
+
+model UserBankAccount {
+  id            String     @id @default(cuid())
+  userId        String     @map("user_id")
+  bankName      String     @map("bank_name")
+  accountNumber String     @map("account_number")
+  accountHolder String     @map("account_holder")
+  isDefault     Boolean    @default(false) @map("is_default")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  donations     Donation[]
+
+  @@unique([userId, accountNumber])
+  @@index([userId])
+  @@map("user_bank_accounts")
 }
