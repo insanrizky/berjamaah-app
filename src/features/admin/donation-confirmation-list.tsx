@@ -54,12 +54,14 @@ interface DonationResponse {
 interface DonationConfirmationListProps {
   status?: 'pending_verification' | 'verified' | 'confirmed' | 'rejected';
   search?: string;
+  programId?: string; // 'all' or specific program id
   className?: string;
 }
 
 export function DonationConfirmationList({
   status = 'pending_verification',
   search,
+  programId,
   className,
 }: DonationConfirmationListProps) {
   const trpcClient = useTRPCClient();
@@ -69,12 +71,13 @@ export function DonationConfirmationList({
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery<DonationResponse>({
-      queryKey: ['admin-donations', status, search, limit],
+      queryKey: ['admin-donations', status, search, programId ?? 'all', limit],
       initialPageParam: 0,
       queryFn: async ({ pageParam }) => {
         return trpcClient.donation.getPendingDonations.query({
           status,
           search,
+          programId,
           limit,
           offset: typeof pageParam === 'number' ? pageParam : 0,
         });
@@ -96,16 +99,16 @@ export function DonationConfirmationList({
   const handleStatusChange = useCallback(() => {
     // Invalidate and refetch the query to ensure data consistency
     queryClient.invalidateQueries({
-      queryKey: ['admin-donations', status, search, limit],
+      queryKey: ['admin-donations', status, search, programId ?? 'all', limit],
     });
-  }, [queryClient, status, search, limit]);
+  }, [queryClient, status, search, programId, limit]);
 
   const handleRefresh = useCallback(async () => {
     // Invalidate and refetch the query to refresh data
     await queryClient.invalidateQueries({
-      queryKey: ['admin-donations', status, search, limit],
+      queryKey: ['admin-donations', status, search, programId ?? 'all', limit],
     });
-  }, [queryClient, status, search, limit]);
+  }, [queryClient, status, search, programId, limit]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {

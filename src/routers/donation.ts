@@ -465,6 +465,7 @@ export const donationRouter = router({
         status: z
           .enum(['pending_verification', 'verified', 'confirmed', 'rejected'])
           .optional(),
+        programId: z.string().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -477,7 +478,7 @@ export const donationRouter = router({
       }
 
       try {
-        const { limit, offset, search, status } = input;
+        const { limit, offset, search, status, programId } = input;
 
         // Build where clause
         const where: {
@@ -487,7 +488,11 @@ export const donationRouter = router({
             donorEmail?: { contains: string; mode: 'insensitive' };
             donationReferenceNumber?: { contains: string; mode: 'insensitive' };
             program?: { title: { contains: string; mode: 'insensitive' } };
+            userBankAccount?: {
+              accountHolder: { contains: string; mode: 'insensitive' };
+            };
           }>;
+          programId?: string;
         } = {};
 
         if (status) {
@@ -495,6 +500,10 @@ export const donationRouter = router({
         } else {
           // Default to pending verification if no status specified
           where.status = 'pending_verification';
+        }
+
+        if (programId && programId !== 'all') {
+          where.programId = programId;
         }
 
         if (search) {
@@ -508,6 +517,11 @@ export const donationRouter = router({
               },
             },
             { program: { title: { contains: search, mode: 'insensitive' } } },
+            {
+              userBankAccount: {
+                accountHolder: { contains: search, mode: 'insensitive' },
+              },
+            },
           ];
         }
 

@@ -6,3 +6,4 @@ export { RoleSelect } from './RoleSelect';
 export { CreateUserForm } from './CreateUserForm';
 export { UserList } from './UserList';
 export { UserListCard } from './UserListCard';
+export { UserFilterDrawer } from './UserFilterDrawer';

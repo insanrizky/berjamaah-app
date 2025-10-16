@@ -1,23 +1,30 @@
 'use client';
 
-import * as React from 'react';
-import { Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useQueryParams } from '@/hooks/use-query-params';
-import { trpc } from '@/utils/trpc';
 import { UserFilters } from './types';
+import { UsersHeader, UserFilterDrawer } from './components';
+import { Button } from '@/components/ui/button';
+import { Plus, Filter } from 'lucide-react';
 import {
-  UsersHeader,
-  SearchInput,
-  StatusSelect,
-  RoleSelect,
-} from './components';
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
 import { UserList } from './components/UserList';
 import Loader from '@/components/shared/loader';
 
 function UsersPageContent() {
   const router = useRouter();
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+
   // URL State Management
   const [queryParams, setQueryParams] = useQueryParams<UserFilters>({
     search: '',
@@ -25,32 +32,17 @@ function UsersPageContent() {
     role: 'all',
   });
 
-  // tRPC query for users stats only
-  const {
-    data: statsData,
-    isLoading: isStatsLoading,
-    error: statsError,
-  } = trpc.user.getUserStats.useQuery();
-
-  // Extract stats with fallbacks
-  const totalUsers = statsData?.total || 0;
-  const activeUsers = statsData?.active || 0;
-  const pendingUsers = statsData?.pending || 0;
-  const scheduledUsers = statsData?.scheduled || 0;
-
   // Filter handlers
-  const handleSearch = (value: string) => {
-    setQueryParams({ search: value });
+  const handleApplyFilters = () => {
+    // Close the filter drawer
+    setIsFilterDrawerOpen(false);
   };
 
-  const handleStatusFilter = (value: string) => {
-    setQueryParams({
-      status: value as 'all' | 'scheduled' | 'pending' | 'active',
-    });
-  };
-
-  const handleRoleFilter = (value: string) => {
-    setQueryParams({ role: value as 'all' | 'admin' | 'user' });
+  const handleResetFilters = () => {
+    // Reset filters to default
+    setQueryParams({ search: '', status: 'all', role: 'all' });
+    // Close the filter drawer
+    setIsFilterDrawerOpen(false);
   };
 
   // User actions
@@ -58,63 +50,78 @@ function UsersPageContent() {
     router.push('/admin/users/add' as Route);
   };
 
-  // Handle error state
-  if (statsError) {
-    return (
-      <div className='flex flex-1 flex-col items-center justify-center'>
-        <div className='text-center'>
-          <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-2'>
-            Error Loading User Stats
-          </h2>
-          <p className='text-gray-600 dark:text-gray-400 mb-4'>
-            {statsError.message ||
-              'Something went wrong while loading user statistics.'}
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700'
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className='flex flex-1 flex-col gap-4'>
-      <div className='flex flex-col gap-4'>
-        <UsersHeader
-          onCreateUserAction={handleCreateUser}
-          totalUsers={totalUsers}
-          activeUsers={activeUsers}
-          pendingUsers={pendingUsers}
-          scheduledUsers={scheduledUsers}
-        />
-        <div className='flex flex-col gap-4'>
-          <SearchInput
-            value={queryParams.search}
-            onChangeAction={handleSearch}
-          />
-          <div className='flex gap-4'>
-            <StatusSelect
-              value={queryParams.status}
-              onChange={handleStatusFilter}
-            />
-            <RoleSelect value={queryParams.role} onChange={handleRoleFilter} />
-          </div>
-        </div>
-      </div>
-      <div className='flex-1'>
-        {isStatsLoading && <Loader />}
+    <div>
+      <div>
+        <div className='space-y-6'>
+          {/* Header */}
+          <UsersHeader />
 
-        {!isStatsLoading && (
+          {/* Add User Button and Filter */}
+          <div className='flex justify-between items-center gap-2'>
+            <Button
+              onClick={handleCreateUser}
+              className='flex items-center gap-2'
+            >
+              <Plus className='w-4 h-4' />
+              Tambah Pengguna
+            </Button>
+            <Drawer
+              direction='bottom'
+              open={isFilterDrawerOpen}
+              onOpenChange={setIsFilterDrawerOpen}
+            >
+              <DrawerTrigger asChild>
+                <Button variant='outline' className='flex items-center gap-2'>
+                  <Filter className='w-4 h-4' />
+                  Filter
+                  {Object.keys(queryParams).some(key => {
+                    const value = queryParams[key as keyof typeof queryParams];
+                    return value && value !== 'all' && value !== '';
+                  }) && (
+                    <span className='bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center'>
+                      {
+                        Object.entries(queryParams).filter(([, value]) => {
+                          return value && value !== 'all' && value !== '';
+                        }).length
+                      }
+                    </span>
+                  )}
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <div className='mx-auto w-full max-w-md h-[80vh] flex flex-col overflow-y-auto'>
+                  <DrawerHeader className='flex-shrink-0'>
+                    <DrawerTitle>Filter Pengguna</DrawerTitle>
+                    <DrawerDescription>
+                      Saring pengguna berdasarkan kriteria yang diinginkan
+                    </DrawerDescription>
+                  </DrawerHeader>
+                  <div className='flex-1 px-4 pb-4'>
+                    <UserFilterDrawer
+                      filters={queryParams}
+                      onFiltersChange={setQueryParams}
+                      onApply={handleApplyFilters}
+                      onReset={handleResetFilters}
+                    />
+                  </div>
+                  <DrawerFooter className='flex-shrink-0'>
+                    <DrawerClose asChild>
+                      <Button variant='outline'>Tutup</Button>
+                    </DrawerClose>
+                  </DrawerFooter>
+                </div>
+              </DrawerContent>
+            </Drawer>
+          </div>
+
+          {/* User List */}
           <UserList
             search={queryParams.search}
             status={queryParams.status}
             role={queryParams.role}
           />
-        )}
+        </div>
       </div>
     </div>
   );

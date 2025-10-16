@@ -29,7 +29,7 @@ export default function Header() {
                     />
                   </div>
                   <span className='text-lg font-semibold text-gray-900 dark:text-white'>
-                    Berjamaah POSKU Bandung
+                    Berjamaah - POSKU Bandung
                   </span>
                 </div>
               </Link>
@@ -50,10 +50,10 @@ export default function Header() {
                   </div>
                   <div className='flex flex-col'>
                     <span className='text-lg font-semibold text-gray-900 dark:text-white leading-tight'>
-                      Berjamaah POSKU Bandung
+                      Berjamaah
                     </span>
-                    <span className='text-xs text-blue-600 dark:text-blue-400 leading-none'>
-                      Admin Portal
+                    <span className='text-xs text-gray-600 dark:text-gray-400 leading-none'>
+                      POSKU Bandung
                     </span>
                   </div>
                 </div>

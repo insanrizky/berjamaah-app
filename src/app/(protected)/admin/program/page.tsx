@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import {
   Drawer,
   DrawerClose,
@@ -14,13 +15,10 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 import Loader from '@/components/shared/loader';
-import { useQuery } from '@tanstack/react-query';
 import { ProgramDetailDrawer } from '@/features/program/program-detail-drawer';
 import { ProgramFilterDrawer } from '@/features/program/program-filter-drawer';
 import { ProgramList } from '@/features/program/program-list';
 import { useQueryParams } from '@/hooks/use-query-params';
-import { formatCurrencyCompact } from '@/lib/currency-utils';
-import { trpcClient } from '@/utils/trpc';
 
 function ProgramPageContent() {
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(
@@ -34,22 +32,6 @@ function ProgramPageContent() {
     status: 'all',
     category: 'all',
   });
-
-  // TRPC query for program statistics
-  const {
-    data: statsData,
-    isLoading: isStatsLoading,
-    error: statsError,
-  } = useQuery({
-    queryKey: ['programStats'],
-    queryFn: async () => {
-      return await trpcClient.program.getProgramStats.query();
-    },
-  });
-
-  const formatCurrency = (amount: number) => {
-    return formatCurrencyCompact(amount);
-  };
 
   const handleApplyFilters = () => {
     // Close the filter drawer
@@ -86,134 +68,31 @@ function ProgramPageContent() {
     <div>
       <div>
         <div className='space-y-6'>
-          {/* Stats Cards */}
-          <div className='grid grid-cols-2 gap-4'>
-            <div className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm'>
-              <div className='text-center'>
-                <p className='text-sm font-medium text-gray-900 dark:text-white mb-1'>
-                  Program Aktif
-                </p>
-                <p className='text-xs text-gray-600 dark:text-gray-400 mb-2'>
-                  Sedang berjalan
-                </p>
-                <div className='text-2xl font-bold text-gray-900 dark:text-white'>
-                  {isStatsLoading ? (
-                    <div className='animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 mx-auto rounded'></div>
-                  ) : statsError ? (
-                    <span className='text-red-500 text-sm'>Error</span>
-                  ) : (
-                    statsData?.totalActivePrograms || 0
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm'>
-              <div className='text-center'>
-                <p className='text-sm font-medium text-gray-900 dark:text-white mb-1'>
-                  Total Donatur
-                </p>
-                <p className='text-xs text-gray-600 dark:text-gray-400 mb-2'>
-                  Semua program
-                </p>
-                <div className='text-2xl font-bold text-gray-900 dark:text-white'>
-                  {isStatsLoading ? (
-                    <div className='animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 mx-auto rounded'></div>
-                  ) : statsError ? (
-                    <span className='text-red-500 text-sm'>Error</span>
-                  ) : (
-                    statsData?.totalDonators || 0
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm'>
-              <div className='text-center'>
-                <p className='text-sm font-medium text-gray-900 dark:text-white mb-1'>
-                  Program Selesai
-                </p>
-                <p className='text-xs text-gray-600 dark:text-gray-400 mb-2'>
-                  Berhasil diselesaikan
-                </p>
-                <div className='text-2xl font-bold text-gray-900 dark:text-white'>
-                  {isStatsLoading ? (
-                    <div className='animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 mx-auto rounded'></div>
-                  ) : statsError ? (
-                    <span className='text-red-500 text-sm'>Error</span>
-                  ) : (
-                    statsData?.totalEndedPrograms || 0
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm'>
-              <div className='text-center'>
-                <p className='text-sm font-medium text-gray-900 dark:text-white mb-1'>
-                  Total Terkumpul
-                </p>
-                <p className='text-xs text-gray-600 dark:text-gray-400 mb-2'>
-                  Sepanjang waktu
-                </p>
-                <div className='text-2xl font-bold text-gray-900 dark:text-white'>
-                  {isStatsLoading ? (
-                    <div className='animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-20 mx-auto rounded'></div>
-                  ) : statsError ? (
-                    <span className='text-red-500 text-sm'>Error</span>
-                  ) : (
-                    formatCurrency(statsData?.totalDonationAmount || 0)
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
           {/* Header */}
           <div>
             <h1 className='text-lg font-semibold text-gray-900 dark:text-white'>
               Daftar Program
             </h1>
             <p className='text-sm text-gray-600 dark:text-gray-400'>
-              Buat program baru, edit yang sudah ada, dan pantau
-              perkembangannya.
+              Kelola program dan pantau perkembangannya.
             </p>
           </div>
 
           {/* Add Program Button and Filter */}
           <div className='flex justify-between items-center gap-2'>
             <Link href='/admin/program/add'>
-              <Button
-                size='sm'
-                className='bg-green-600 hover:bg-green-700 text-white'
-              >
-                <svg
-                  className='w-4 h-4 mr-2'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M12 4v16m8-8H4'
-                  />
-                </svg>
+              <Button className='flex items-center gap-2'>
+                <Plus className='w-4 h-4' />
                 Tambah Program
               </Button>
             </Link>
-
             <Drawer
               direction='bottom'
               open={isFilterDrawerOpen}
               onOpenChange={setIsFilterDrawerOpen}
             >
               <DrawerTrigger asChild>
-                <Button
-                  size='sm'
-                  variant='outline'
-                  className='flex items-center gap-2'
-                >
+                <Button variant='outline' className='flex items-center gap-2'>
                   <svg
                     className='w-4 h-4'
                     fill='none'

@@ -78,11 +78,9 @@ export default function SignInForm() {
   return (
     <Card className='w-full shadow-lg'>
       <CardHeader className='text-center'>
-        <CardTitle className='text-2xl font-bold'>
-          Selamat Datang Kembali
-        </CardTitle>
+        <CardTitle className='text-2xl font-bold'>Selamat Datang</CardTitle>
         <CardDescription>
-          Masuk ke akun donor Berjamaah POSKU Bandung Anda
+          Masuk ke akun Berjamaah - POSKU Bandung
         </CardDescription>
       </CardHeader>
       <CardContent>
