@@ -6,6 +6,8 @@ import { trpcClient } from '@/utils/trpc';
 import Loader from '@/components/shared/loader';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +22,17 @@ import {
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Calendar,
+  Target,
+  Users,
+  Banknote,
+  FileText,
+  Phone,
+  Tag,
+  TrendingUp,
+  Shield,
+} from 'lucide-react';
 
 interface Program {
   id: string;
@@ -303,16 +316,17 @@ export function ProgramDetailDrawer({
 
   return (
     <div className='space-y-6'>
-      {/* Header */}
-      <div className='text-center'>
-        <h2 className='text-xl font-bold text-gray-900 dark:text-white mb-2'>
+      {/* Header with Title and Status */}
+      <div className='text-center space-y-3'>
+        <h2 className='text-xl font-bold text-gray-900 dark:text-white'>
           {program.title}
         </h2>
-        <span
-          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(program.status)}`}
+        <Badge
+          variant='secondary'
+          className={`text-sm px-3 py-1 ${getStatusColor(program.status)}`}
         >
           {getStatusText(program.status)}
-        </span>
+        </Badge>
       </div>
 
       {/* Banner Image */}
@@ -321,95 +335,198 @@ export function ProgramDetailDrawer({
           <img
             src={program.bannerImage}
             alt={`Banner ${program.title}`}
-            className='w-full object-cover rounded-lg border border-gray-200 dark:border-gray-700'
+            className='w-full h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-700'
             onError={e => {
-              // Hide image if it fails to load
               e.currentTarget.style.display = 'none';
             }}
           />
         </div>
       )}
 
-      {/* Progress */}
-      <div className='space-y-2'>
-        <div className='flex justify-between text-sm'>
-          <span className='text-gray-600 dark:text-gray-400'>Perkembangan</span>
-          <span className='text-gray-900 dark:text-white font-medium'>
-            {program.progressPercentage?.toFixed(2)}%
-          </span>
-        </div>
-        <div className='w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3'>
-          <div
-            className='bg-green-600 h-3 rounded-full transition-all duration-300'
-            style={{
-              width: `${program.progressPercentage?.toFixed(2)}%`,
-            }}
-          ></div>
-        </div>
-        <div className='flex justify-between text-sm text-gray-600 dark:text-gray-400'>
-          <span>Terkumpul: {formatCurrency(program.totalRaisedAmount)}</span>
-          <span>Target: {formatCurrency(Number(program.targetAmount))}</span>
-        </div>
-      </div>
-
-      {/* Basic Info */}
-      <div className='space-y-4'>
-        <div>
-          <h3 className='font-semibold text-gray-900 dark:text-white mb-2'>
-            Deskripsi
-          </h3>
-          <p className='text-sm text-gray-600 dark:text-gray-400'>
-            {program.description}
-          </p>
-        </div>
-
-        {program.details && (
-          <div>
-            <h3 className='font-semibold text-gray-900 dark:text-white mb-2'>
-              Detail Program
-            </h3>
-            <p className='text-sm text-gray-600 dark:text-gray-400'>
-              {program.details}
-            </p>
-          </div>
-        )}
-
-        <div className='grid grid-cols-2 gap-4'>
-          <div>
-            <h4 className='font-medium text-gray-900 dark:text-white text-sm'>
-              Kategori
-            </h4>
-            <p className='text-sm text-gray-600 dark:text-gray-400'>
-              {program.category}
-            </p>
-          </div>
-
-          <div>
-            <h4 className='font-medium text-gray-900 dark:text-white text-sm'>
-              Donatur
-            </h4>
-            <p className='text-sm text-gray-600 dark:text-gray-400'>
-              {program._count.donations} orang
-            </p>
-          </div>
-        </div>
-
-        {program.contact && (
-          <div>
-            <h4 className='font-medium text-gray-900 dark:text-white text-sm mb-1'>
-              Kontak
-            </h4>
-            <p className='text-sm text-gray-600 dark:text-gray-400'>
-              {program.contact}
-            </p>
-          </div>
-        )}
-
-        {latestPeriod && (
+      {/* Program Information Section */}
+      <Card className='gap-0'>
+        <CardHeader className='pb-3'>
+          <CardTitle className='text-sm font-medium flex items-center gap-2'>
+            <FileText className='w-4 h-4' />
+            Informasi Program
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className='space-y-3'>
-            {/* Date Alert Information */}
+            <div className='flex items-center gap-3'>
+              <Tag className='w-5 h-5 text-gray-400' />
+              <div>
+                <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                  {program.category || 'Tidak ada kategori'}
+                </p>
+                <p className='text-xs text-gray-600 dark:text-gray-400'>
+                  Kategori
+                </p>
+              </div>
+            </div>
+            <div className='flex items-start gap-3'>
+              <FileText className='w-5 h-5 text-gray-400 mt-0.5' />
+              <div className='flex-1'>
+                <p className='text-sm font-medium text-gray-900 dark:text-white mb-1'>
+                  Deskripsi
+                </p>
+                <p className='text-sm text-gray-600 dark:text-gray-400'>
+                  {program.description}
+                </p>
+              </div>
+            </div>
+
+            {program.details && (
+              <div className='flex items-start gap-3'>
+                <FileText className='w-5 h-5 text-gray-400 mt-0.5' />
+                <div className='flex-1'>
+                  <p className='text-sm font-medium text-gray-900 dark:text-white mb-1'>
+                    Detail Program
+                  </p>
+                  <p className='text-sm text-gray-600 dark:text-gray-400'>
+                    {program.details}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {program.contact && (
+              <div className='flex items-center gap-3'>
+                <Phone className='w-5 h-5 text-gray-400' />
+                <div>
+                  <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                    {program.contact}
+                  </p>
+                  <p className='text-xs text-gray-600 dark:text-gray-400'>
+                    Kontak
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Progress & Funding Section */}
+      <Card className='gap-0'>
+        <CardHeader className='pb-3'>
+          <CardTitle className='text-sm font-medium flex items-center gap-2'>
+            <Target className='w-4 h-4' />
+            Progress & Pendanaan
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Progress Bar */}
+          <div className='space-y-2 mb-4'>
+            <div className='flex justify-between text-sm'>
+              <span className='text-gray-600 dark:text-gray-400'>
+                Perkembangan
+              </span>
+              <span className='text-gray-900 dark:text-white font-medium'>
+                {program.progressPercentage?.toFixed(1)}%
+              </span>
+            </div>
+            <div className='w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3'>
+              <div
+                className='bg-green-600 h-3 rounded-full transition-all duration-300'
+                style={{
+                  width: `${Math.min(program.progressPercentage || 0, 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+
+          <div className='space-y-3'>
+            <div className='flex items-center gap-3'>
+              <Banknote className='w-5 h-5 text-gray-400' />
+              <div>
+                <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                  {formatCurrency(program.totalRaisedAmount)}
+                </p>
+                <p className='text-xs text-gray-600 dark:text-gray-400'>
+                  Dana Terkumpul
+                </p>
+              </div>
+            </div>
+
+            <div className='flex items-center gap-3'>
+              <Target className='w-5 h-5 text-gray-400' />
+              <div>
+                <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                  {formatCurrency(Number(program.targetAmount))}
+                </p>
+                <p className='text-xs text-gray-600 dark:text-gray-400'>
+                  Target Dana
+                </p>
+              </div>
+            </div>
+
+            <div className='flex items-center gap-3'>
+              <Users className='w-5 h-5 text-gray-400' />
+              <div>
+                <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                  {program._count.donations} orang
+                </p>
+                <p className='text-xs text-gray-600 dark:text-gray-400'>
+                  Total Donatur
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Schedule & Status Section */}
+      {latestPeriod && (
+        <Card className='gap-0'>
+          <CardHeader className='pb-3'>
+            <CardTitle className='text-sm font-medium flex items-center gap-2'>
+              <Calendar className='w-4 h-4' />
+              Jadwal Program
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className='space-y-3'>
+              <div className='flex items-center gap-3'>
+                <Calendar className='w-5 h-5 text-gray-400' />
+                <div>
+                  <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                    {displayPeriodDate(latestPeriod.startDate)}
+                  </p>
+                  <p className='text-xs text-gray-600 dark:text-gray-400'>
+                    Tanggal Mulai
+                  </p>
+                </div>
+              </div>
+
+              <div className='flex items-center gap-3'>
+                <Calendar className='w-5 h-5 text-gray-400' />
+                <div>
+                  <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                    {displayPeriodDate(latestPeriod.endDate)}
+                  </p>
+                  <p className='text-xs text-gray-600 dark:text-gray-400'>
+                    Tanggal Selesai
+                  </p>
+                </div>
+              </div>
+
+              <div className='flex items-center gap-3'>
+                <TrendingUp className='w-5 h-5 text-gray-400' />
+                <div>
+                  <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                    {getCreatorDisplayName(program)}
+                  </p>
+                  <p className='text-xs text-gray-600 dark:text-gray-400'>
+                    Dibuat oleh • {formatDateTime(program.createdAt)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Date Alert */}
             <Alert
-              className={`${
+              className={`mt-4 ${
                 getDateAlertInfo(latestPeriod.startDate, latestPeriod.endDate)
                   .type === 'warning'
                   ? 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20'
@@ -428,137 +545,107 @@ export function ProgramDetailDrawer({
                 }
               </AlertDescription>
             </Alert>
-
-            <div className='grid grid-cols-2 gap-4'>
-              <div>
-                <h4 className='font-medium text-gray-900 dark:text-white text-sm'>
-                  Tanggal Mulai
-                </h4>
-                <p className='text-sm text-gray-600 dark:text-gray-400'>
-                  {displayPeriodDate(latestPeriod.startDate)}
-                </p>
-              </div>
-              <div>
-                <h4 className='font-medium text-gray-900 dark:text-white text-sm'>
-                  Tanggal Selesai
-                </h4>
-                <p className='text-sm text-gray-600 dark:text-gray-400'>
-                  {displayPeriodDate(latestPeriod.endDate)}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div>
-          <h4 className='font-medium text-gray-900 dark:text-white text-sm mb-1'>
-            Dibuat
-          </h4>
-          <p className='text-sm text-gray-600 dark:text-gray-400'>
-            {getCreatorDisplayName(program)} |{' '}
-            {formatDateTime(program.createdAt)}
-          </p>
-        </div>
-      </div>
-
-      {/* Status Update Buttons - Only show if user is the creator */}
-      {session?.user?.id === program?.createdBy && (
-        <div className='pt-4 border-t border-gray-200 dark:border-gray-700'>
-          <h3 className='font-semibold text-gray-900 dark:text-white mb-3'>
-            Kelola Status Program
-          </h3>
-          <div className='space-y-2'>
-            {getAvailableStatusActions(program.status).map(action => (
-              <Button
-                key={action.status}
-                variant={
-                  action.variant as 'default' | 'outline' | 'destructive'
-                }
-                size='sm'
-                className='w-full'
-                onClick={() => handleUpdateStatus(action.status)}
-                disabled={updateStatusMutation.isPending}
-              >
-                {updateStatusMutation.isPending ? (
-                  <>
-                    <div className='w-4 h-4 mr-2'>
-                      <Loader />
-                    </div>
-                    Memproses...
-                  </>
-                ) : (
-                  action.label
-                )}
-              </Button>
-            ))}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Delete Button - Only show if user is the creator */}
+      {/* Admin Actions - Only show if user is the creator */}
       {session?.user?.id === program?.createdBy && (
-        <div className='pt-4 border-t border-gray-200 dark:border-gray-700'>
-          <AlertDialog
-            open={isDeleteDialogOpen}
-            onOpenChange={setIsDeleteDialogOpen}
-          >
-            <AlertDialogTrigger asChild>
-              <Button
-                variant='destructive'
-                size='sm'
-                className='w-full'
-                disabled={deleteProgramMutation.isPending}
+        <Card className='gap-0'>
+          <CardHeader className='pb-3'>
+            <CardTitle className='text-sm font-medium flex items-center gap-2'>
+              <Shield className='w-4 h-4' />
+              Kelola Program
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Status Actions */}
+            {getAvailableStatusActions(program.status).length > 0 && (
+              <div className='space-y-2 mb-4'>
+                <p className='text-sm text-gray-600 dark:text-gray-400 mb-2'>
+                  Ubah Status Program
+                </p>
+                {getAvailableStatusActions(program.status).map(action => (
+                  <Button
+                    key={action.status}
+                    variant={
+                      action.variant as 'default' | 'outline' | 'destructive'
+                    }
+                    size='sm'
+                    className='w-full'
+                    onClick={() => handleUpdateStatus(action.status)}
+                    disabled={updateStatusMutation.isPending}
+                  >
+                    {updateStatusMutation.isPending ? (
+                      <>
+                        <div className='w-4 h-4 mr-2'>
+                          <Loader />
+                        </div>
+                        Memproses...
+                      </>
+                    ) : (
+                      action.label
+                    )}
+                  </Button>
+                ))}
+              </div>
+            )}
+
+            {/* Delete Action */}
+            <div className='pt-4 border-t border-gray-200 dark:border-gray-700'>
+              <p className='text-sm text-gray-600 dark:text-gray-400 mb-2'>
+                Zona Bahaya
+              </p>
+              <AlertDialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
               >
-                {deleteProgramMutation.isPending ? (
-                  <>
-                    <div className='w-4 h-4 mr-2'>
-                      <Loader />
-                    </div>
-                    Menghapus...
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      className='w-4 h-4 mr-2'
-                      fill='none'
-                      stroke='currentColor'
-                      viewBox='0 0 24 24'
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant='destructive'
+                    size='sm'
+                    className='w-full'
+                    disabled={deleteProgramMutation.isPending}
+                  >
+                    {deleteProgramMutation.isPending ? (
+                      <>
+                        <div className='w-4 h-4 mr-2'>
+                          <Loader />
+                        </div>
+                        Menghapus...
+                      </>
+                    ) : (
+                      'Hapus Program'
+                    )}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Hapus Program</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Apakah Anda yakin ingin menghapus program &quot;
+                      {program?.title}&quot;? Tindakan ini tidak dapat
+                      dibatalkan dan akan menghapus semua data program termasuk
+                      periode dan donasi yang terkait.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteProgram}
+                      className='bg-red-600 hover:bg-red-700'
+                      disabled={deleteProgramMutation.isPending}
                     >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth={2}
-                        d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
-                      />
-                    </svg>
-                    Hapus Program
-                  </>
-                )}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Hapus Program</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Apakah Anda yakin ingin menghapus program &quot;
-                  {program?.title}&quot;? Tindakan ini tidak dapat dibatalkan
-                  dan akan menghapus semua data program termasuk periode dan
-                  donasi yang terkait.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Batal</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDeleteProgram}
-                  className='bg-red-600 hover:bg-red-700'
-                  disabled={deleteProgramMutation.isPending}
-                >
-                  {deleteProgramMutation.isPending ? 'Menghapus...' : 'Hapus'}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+                      {deleteProgramMutation.isPending
+                        ? 'Menghapus...'
+                        : 'Hapus'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

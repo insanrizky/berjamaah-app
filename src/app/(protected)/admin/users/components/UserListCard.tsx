@@ -10,7 +10,7 @@ import {
   CardDataDescription,
   CardDataTimestamp,
 } from '@/components/shared/list-card';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -49,6 +49,7 @@ import {
   Phone,
   Calendar,
   Banknote,
+  Shield,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
@@ -462,119 +463,198 @@ export function UserListCard({
                 {/* Dummy Content */}
                 <div className='space-y-6'>
                   {/* User Info Section */}
-                  <div className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4'>
-                    <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-4'>
-                      Informasi Pengguna
-                    </h3>
-                    <div className='space-y-3'>
-                      <div className='flex items-center gap-3'>
-                        <User className='w-5 h-5 text-gray-400' />
-                        <div>
-                          <p className='text-sm font-medium text-gray-900 dark:text-white'>
-                            {selectedUser.fullName || 'Nama tidak tersedia'}
-                          </p>
-                          <p className='text-xs text-gray-600 dark:text-gray-400'>
-                            Nama Lengkap
-                          </p>
+                  <Card className='gap-0'>
+                    <CardHeader className='pb-3'>
+                      <CardTitle className='text-sm font-medium flex items-center gap-2'>
+                        <User className='w-4 h-4' />
+                        Informasi Pengguna
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className='space-y-3'>
+                        <div className='flex items-center gap-3'>
+                          <User className='w-5 h-5 text-gray-400' />
+                          <div>
+                            <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                              {selectedUser.fullName || 'Nama tidak tersedia'}
+                            </p>
+                            <p className='text-xs text-gray-600 dark:text-gray-400'>
+                              Nama Lengkap
+                            </p>
+                          </div>
+                        </div>
+                        <div className='flex items-center gap-3'>
+                          <Mail className='w-5 h-5 text-gray-400' />
+                          <div>
+                            <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                              {selectedUser.email}
+                            </p>
+                            <p className='text-xs text-gray-600 dark:text-gray-400'>
+                              Email
+                            </p>
+                          </div>
+                        </div>
+                        <div className='flex items-center gap-3'>
+                          <Phone className='w-5 h-5 text-gray-400' />
+                          <div>
+                            <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                              {selectedUser.phone || 'Tidak tersedia'}
+                            </p>
+                            <p className='text-xs text-gray-600 dark:text-gray-400'>
+                              Nomor Telepon
+                            </p>
+                          </div>
                         </div>
                       </div>
-                      <div className='flex items-center gap-3'>
-                        <Mail className='w-5 h-5 text-gray-400' />
-                        <div>
-                          <p className='text-sm font-medium text-gray-900 dark:text-white'>
-                            {selectedUser.email}
-                          </p>
-                          <p className='text-xs text-gray-600 dark:text-gray-400'>
-                            Email
-                          </p>
-                        </div>
-                      </div>
-                      <div className='flex items-center gap-3'>
-                        <Phone className='w-5 h-5 text-gray-400' />
-                        <div>
-                          <p className='text-sm font-medium text-gray-900 dark:text-white'>
-                            {selectedUser.phone || 'Tidak tersedia'}
-                          </p>
-                          <p className='text-xs text-gray-600 dark:text-gray-400'>
-                            Nomor Telepon
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
 
                   {/* Status & Role Section */}
-                  <div className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4'>
-                    <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-4'>
-                      Status & Role
-                    </h3>
-                    <div className='space-y-3'>
-                      <div className='flex items-center justify-between'>
-                        <span className='text-sm text-gray-600 dark:text-gray-400'>
-                          Status
-                        </span>
-                        <Badge
-                          variant='secondary'
-                          className={`text-xs px-2 py-1 ${getStatusColor(selectedUser.status)}`}
-                        >
-                          {getStatusText(selectedUser.status)}
-                        </Badge>
+                  <Card className='gap-0'>
+                    <CardHeader className='pb-3'>
+                      <CardTitle className='text-sm font-medium flex items-center gap-2'>
+                        <Shield className='w-4 h-4' />
+                        Status & Role
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className='space-y-3'>
+                        <div className='flex items-center justify-between'>
+                          <span className='text-sm text-gray-600 dark:text-gray-400'>
+                            Status
+                          </span>
+                          <Badge
+                            variant='secondary'
+                            className={`text-xs px-2 py-1 ${getStatusColor(selectedUser.status)}`}
+                          >
+                            {getStatusText(selectedUser.status)}
+                          </Badge>
+                        </div>
+                        <div className='flex items-center justify-between'>
+                          <span className='text-sm text-gray-600 dark:text-gray-400'>
+                            Role
+                          </span>
+                          <Badge
+                            variant='outline'
+                            className='text-xs px-2 py-1'
+                          >
+                            {getRoleText(selectedUser.role)}
+                          </Badge>
+                        </div>
                       </div>
-                      <div className='flex items-center justify-between'>
-                        <span className='text-sm text-gray-600 dark:text-gray-400'>
-                          Role
-                        </span>
-                        <Badge variant='outline' className='text-xs px-2 py-1'>
-                          {getRoleText(selectedUser.role)}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
 
                   {/* Activity Section */}
-                  <div className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4'>
-                    <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-4'>
-                      Aktivitas
-                    </h3>
-                    <div className='space-y-3'>
-                      <div className='flex items-center gap-3'>
-                        <Calendar className='w-5 h-5 text-gray-400' />
-                        <div>
-                          <p className='text-sm font-medium text-gray-900 dark:text-white'>
-                            {formatDate(selectedUser.createdAt)}
-                          </p>
-                          <p className='text-xs text-gray-600 dark:text-gray-400'>
-                            Tanggal Bergabung
-                          </p>
+                  <Card className='gap-0'>
+                    <CardHeader className='pb-3'>
+                      <CardTitle className='text-sm font-medium flex items-center gap-2'>
+                        <Calendar className='w-4 h-4' />
+                        Aktivitas
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className='space-y-3'>
+                        <div className='flex items-center gap-3'>
+                          <Calendar className='w-5 h-5 text-gray-400' />
+                          <div>
+                            <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                              {formatDate(selectedUser.createdAt)}
+                            </p>
+                            <p className='text-xs text-gray-600 dark:text-gray-400'>
+                              Tanggal Bergabung
+                            </p>
+                          </div>
+                        </div>
+                        <div className='flex items-center gap-3'>
+                          <Banknote className='w-5 h-5 text-gray-400' />
+                          <div>
+                            <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                              {selectedUser.totalDonations || 0} donasi
+                            </p>
+                            <p className='text-xs text-gray-600 dark:text-gray-400'>
+                              Total Donasi
+                            </p>
+                          </div>
+                        </div>
+                        <div className='flex items-center gap-3'>
+                          <Banknote className='w-5 h-5 text-gray-400' />
+                          <div>
+                            <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                              Rp{' '}
+                              {selectedUser.totalAmount?.toLocaleString(
+                                'id-ID'
+                              ) || '0'}
+                            </p>
+                            <p className='text-xs text-gray-600 dark:text-gray-400'>
+                              Total Nominal Donasi
+                            </p>
+                          </div>
                         </div>
                       </div>
-                      <div className='flex items-center gap-3'>
-                        <Banknote className='w-5 h-5 text-gray-400' />
-                        <div>
-                          <p className='text-sm font-medium text-gray-900 dark:text-white'>
-                            {selectedUser.totalDonations || 0} donasi
+                    </CardContent>
+                  </Card>
+
+                  {/* Admin Actions - Only show if not the current user and not main admin */}
+                  {(selectedUser.fullName !== 'Admin Berjamaah' ||
+                    selectedUser.email !== session?.user?.email) && (
+                    <Card className='gap-0'>
+                      <CardHeader className='pb-3'>
+                        <CardTitle className='text-sm font-medium flex items-center gap-2'>
+                          <Shield className='w-4 h-4' />
+                          Kelola Pengguna
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {/* Role Actions */}
+                        <div className='space-y-2 mb-4'>
+                          <p className='text-sm text-gray-600 dark:text-gray-400 mb-3'>
+                            Ubah Role Pengguna
                           </p>
-                          <p className='text-xs text-gray-600 dark:text-gray-400'>
-                            Total Donasi
-                          </p>
+                          {selectedUser.role === 'user' ? (
+                            <Button
+                              onClick={() => openAdminDialog(selectedUser)}
+                              disabled={selectedUser.status !== 'active'}
+                              className='w-full bg-blue-500 hover:bg-blue-600'
+                            >
+                              <UserPlus className='w-4 h-4 mr-2' />
+                              Jadikan Admin
+                            </Button>
+                          ) : (
+                            <Button
+                              onClick={() => openUserDialog(selectedUser)}
+                              variant='outline'
+                              className='w-full'
+                            >
+                              <UserPlus className='w-4 h-4 mr-2' />
+                              Jadikan User
+                            </Button>
+                          )}
                         </div>
-                      </div>
-                      <div className='flex items-center gap-3'>
-                        <Banknote className='w-5 h-5 text-gray-400' />
-                        <div>
-                          <p className='text-sm font-medium text-gray-900 dark:text-white'>
-                            Rp{' '}
-                            {selectedUser.totalAmount?.toLocaleString(
-                              'id-ID'
-                            ) || '0'}
-                          </p>
-                          <p className='text-xs text-gray-600 dark:text-gray-400'>
-                            Total Nominal Donasi
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+
+                        {/* Email Actions */}
+                        {(selectedUser.status === 'pending' ||
+                          selectedUser.status === 'scheduled') && (
+                          <div className='pt-4 border-t border-gray-200 dark:border-gray-700'>
+                            <p className='text-sm text-gray-600 dark:text-gray-400 mb-3'>
+                              Email Aktivasi
+                            </p>
+                            <Button
+                              onClick={() => openResendDialog(selectedUser)}
+                              disabled={isResendingActivation}
+                              variant='outline'
+                              className='w-full'
+                            >
+                              <Send className='w-4 h-4 mr-2' />
+                              {isResendingActivation
+                                ? 'Mengirim...'
+                                : 'Kirim Ulang Email Aktivasi'}
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               </div>
               <DrawerFooter className='flex-shrink-0'>

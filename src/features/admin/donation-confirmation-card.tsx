@@ -3,7 +3,14 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, CheckCircle, XCircle } from 'lucide-react';
+import {
+  CheckCircle,
+  XCircle,
+  User,
+  Calendar,
+  CreditCard,
+  Hash,
+} from 'lucide-react';
 import { formatCurrency } from '@/lib/currency-utils';
 import { useCallback, useState } from 'react';
 import { useTRPCClient } from '@/utils/trpc';
@@ -244,78 +251,124 @@ export function DonationConfirmationCard({
 
   return (
     <>
-      <Card className='border border-gray-200 dark:border-gray-700 py-0'>
-        <CardContent className='p-4'>
-          <div className='space-y-3'>
-            <div className='flex items-center justify-between'>
-              <div>
-                <h3 className='font-semibold text-gray-900 dark:text-white text-base'>
-                  {donation.donorName}
-                </h3>
-                <p className='text-sm text-gray-600 dark:text-gray-400'>
-                  Program: {donation.program.title}
+      <Card className='border border-gray-200 dark:border-gray-700 py-0 hover:shadow-md transition-shadow cursor-pointer'>
+        <CardContent
+          className='p-4'
+          onClick={() => setIsDetailDrawerOpen(true)}
+        >
+          <div className='space-y-4'>
+            {/* Header with donor name and status */}
+            <div className='flex items-start justify-between gap-3'>
+              <div className='flex-1 min-w-0'>
+                <div className='flex items-center gap-2 mb-1'>
+                  <User className='w-4 h-4 text-gray-400' />
+                  <h3 className='font-semibold text-gray-900 dark:text-white text-base truncate'>
+                    {donation.donorName}
+                  </h3>
+                </div>
+                <p className='text-sm text-gray-600 dark:text-gray-400 truncate ml-6'>
+                  {donation.program.title}
                 </p>
               </div>
               {getStatusBadge(donation.status)}
             </div>
 
-            <div className='space-y-2'>
-              <div className='flex justify-between text-sm'>
-                <span className='text-gray-600 dark:text-gray-400'>
-                  Jumlah: {formatCurrency(Number(donation.amount))}
-                </span>
-                <span className='text-gray-600 dark:text-gray-400'>
-                  Metode: {getPaymentMethodText(donation.paymentMethod)}
-                </span>
-              </div>
-
-              {donation.donationReferenceNumber && (
-                <div className='text-sm text-gray-600 dark:text-gray-400'>
-                  Ref: {donation.donationReferenceNumber}
+            {/* Amount - prominent display */}
+            <div className='bg-gray-50 dark:bg-gray-800 rounded-lg p-3'>
+              <div className='text-center'>
+                <div className='text-2xl font-bold text-gray-900 dark:text-white'>
+                  {formatCurrency(Number(donation.amount))}
                 </div>
-              )}
-
-              <div className='text-sm text-gray-600 dark:text-gray-400'>
-                Tanggal:{' '}
-                {new Date(donation.createdAt).toLocaleDateString('id-ID', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </div>
-
-              {donation.userBankAccount && (
-                <div className='text-sm text-gray-600 dark:text-gray-400'>
-                  Dari: {donation.userBankAccount.bankName} -{' '}
-                  {donation.userBankAccount.accountNumber} -{' '}
-                  {donation.userBankAccount.accountHolder}
+                <div className='text-sm text-gray-600 dark:text-gray-400 mt-1'>
+                  Jumlah Donasi
                 </div>
-              )}
+              </div>
             </div>
 
-            <div className='flex gap-2'>
+            {/* Key Information */}
+            <div className='grid grid-cols-2 gap-3 text-sm'>
+              <div className='flex items-center gap-2'>
+                <Calendar className='w-4 h-4 text-gray-400' />
+                <div>
+                  <p className='text-gray-900 dark:text-white font-medium'>
+                    {new Date(donation.createdAt).toLocaleDateString('id-ID', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </p>
+                  <p className='text-xs text-gray-600 dark:text-gray-400'>
+                    Tanggal
+                  </p>
+                </div>
+              </div>
+
+              <div className='flex items-center gap-2'>
+                <CreditCard className='w-4 h-4 text-gray-400' />
+                <div>
+                  <p className='text-gray-900 dark:text-white font-medium'>
+                    {getPaymentMethodText(donation.paymentMethod)}
+                  </p>
+                  <p className='text-xs text-gray-600 dark:text-gray-400'>
+                    Metode
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Reference Number if available */}
+            {donation.donationReferenceNumber && (
+              <div className='flex items-center gap-2 text-sm bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2'>
+                <Hash className='w-4 h-4 text-blue-600 dark:text-blue-400' />
+                <div>
+                  <p className='text-blue-900 dark:text-blue-100 font-medium'>
+                    {donation.donationReferenceNumber}
+                  </p>
+                  <p className='text-xs text-blue-600 dark:text-blue-400'>
+                    Nomor Referensi
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Bank Account Info if available */}
+            {donation.userBankAccount && (
+              <div className='text-sm bg-gray-50 dark:bg-gray-800 rounded-lg p-2'>
+                <p className='text-gray-900 dark:text-white font-medium'>
+                  {donation.userBankAccount.bankName} -{' '}
+                  {donation.userBankAccount.accountNumber}
+                </p>
+                <p className='text-xs text-gray-600 dark:text-gray-400'>
+                  a.n. {donation.userBankAccount.accountHolder}
+                </p>
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div
+              className='flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700'
+              onClick={e => e.stopPropagation()}
+            >
               {donation.status === 'pending_verification' && (
                 <>
                   <Button
                     size='sm'
                     onClick={handleVerify}
                     disabled={isVerifying || isRejecting}
-                    className='text-xs px-3 py-1 h-auto bg-green-500 hover:bg-green-600'
+                    className='flex-1 text-xs h-8 bg-green-500 hover:bg-green-600'
                   >
                     <CheckCircle className='w-3 h-3 mr-1' />
-                    {isVerifying ? 'Memverifikasi...' : 'Verifikasi'}
+                    {isVerifying ? 'Verifikasi...' : 'Verifikasi'}
                   </Button>
                   <Button
                     size='sm'
                     onClick={handleReject}
                     disabled={isVerifying || isRejecting}
                     variant='outline'
-                    className='text-xs px-3 py-1 h-auto border-red-200 text-red-700 hover:bg-red-50'
+                    className='flex-1 text-xs h-8 border-red-200 text-red-700 hover:bg-red-50'
                   >
                     <XCircle className='w-3 h-3 mr-1' />
-                    {isRejecting ? 'Menolak...' : 'Tolak'}
+                    {isRejecting ? 'Tolak...' : 'Tolak'}
                   </Button>
                 </>
               )}
@@ -325,26 +378,18 @@ export function DonationConfirmationCard({
                   size='sm'
                   onClick={handleConfirm}
                   disabled={isConfirming}
-                  className='text-xs px-3 py-1 h-auto bg-blue-500 hover:bg-blue-600'
+                  className='flex-1 text-xs h-8 bg-blue-500 hover:bg-blue-600'
                 >
                   <CheckCircle className='w-3 h-3 mr-1' />
-                  {isConfirming ? 'Mengkonfirmasi...' : 'Konfirmasi'}
+                  {isConfirming ? 'Konfirmasi...' : 'Konfirmasi'}
                 </Button>
               )}
-
-              <Button
-                size='sm'
-                variant='outline'
-                className='text-xs px-3 py-1 h-auto'
-                onClick={() => setIsDetailDrawerOpen(true)}
-              >
-                <Eye className='w-3 h-3 mr-1' />
-                Detail
-              </Button>
             </div>
 
+            {/* Verification info if available */}
             {donation.verifiedByAdmin && (
-              <div className='text-xs text-gray-500 pt-2 border-t border-gray-100'>
+              <div className='text-xs text-gray-500 pt-2 border-t border-gray-100 dark:border-gray-700'>
+                <span className='text-green-600 dark:text-green-400'>✓</span>{' '}
                 Diverifikasi oleh:{' '}
                 {donation.verifiedByAdmin.fullName ||
                   donation.verifiedByAdmin.email}

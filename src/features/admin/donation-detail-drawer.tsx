@@ -10,6 +10,7 @@ import {
   DrawerClose,
   DrawerContent,
   DrawerDescription,
+  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
@@ -172,8 +173,8 @@ export function AdminDonationDetailDrawer({
       <DrawerContent className='max-h-[85vh] flex flex-col'>
         <div className='max-w-2xl mx-auto w-full px-4 flex-1 flex flex-col min-h-0'>
           <DrawerHeader className='pb-4 flex-shrink-0'>
-            <div className='flex items-center justify-between'>
-              <div>
+            <div className=''>
+              <div className='mb-4'>
                 <DrawerTitle className='text-lg font-semibold'>
                   Detail Donasi
                 </DrawerTitle>
@@ -452,51 +453,73 @@ export function AdminDonationDetailDrawer({
               </Card>
             )}
 
-            {/* Action Buttons */}
-            <div className='flex gap-3 pt-4 pb-2'>
+            {/* Admin Actions */}
+            {(donation.status === 'pending_verification' ||
+              donation.status === 'verified') && (
+              <Card className='gap-0'>
+                <CardHeader className='pb-3'>
+                  <CardTitle className='text-sm font-medium flex items-center gap-2'>
+                    <Shield className='w-4 h-4' />
+                    Kelola Donasi
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {/* Status Actions */}
+                  {donation.status === 'pending_verification' && (
+                    <div className='space-y-2'>
+                      <p className='text-sm text-gray-600 dark:text-gray-400 mb-3'>
+                        Verifikasi Donasi
+                      </p>
+                      <div className='flex gap-2'>
+                        {onVerify && (
+                          <Button
+                            onClick={() => onVerify(donation.id)}
+                            disabled={isVerifying || isRejecting}
+                            className='flex-1 bg-green-500 hover:bg-green-600'
+                          >
+                            <CheckCircle className='w-4 h-4 mr-2' />
+                            {isVerifying ? 'Memverifikasi...' : 'Verifikasi'}
+                          </Button>
+                        )}
+                        {onReject && (
+                          <Button
+                            onClick={() => onReject(donation.id)}
+                            disabled={isVerifying || isRejecting}
+                            variant='outline'
+                            className='flex-1 border-red-200 text-red-700 hover:bg-red-50'
+                          >
+                            <XCircle className='w-4 h-4 mr-2' />
+                            {isRejecting ? 'Menolak...' : 'Tolak'}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {donation.status === 'verified' && onConfirm && (
+                    <div className='space-y-2'>
+                      <p className='text-sm text-gray-600 dark:text-gray-400 mb-3'>
+                        Konfirmasi Donasi
+                      </p>
+                      <Button
+                        onClick={() => onConfirm(donation.id)}
+                        disabled={isConfirming}
+                        className='w-full bg-blue-500 hover:bg-blue-600'
+                      >
+                        <CheckCircle className='w-4 h-4 mr-2' />
+                        {isConfirming ? 'Mengkonfirmasi...' : 'Konfirmasi'}
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            <DrawerFooter className='flex-shrink-0'>
               <DrawerClose asChild>
-                <Button variant='outline' className='flex-1'>
-                  Tutup
-                </Button>
+                <Button variant='outline'>Tutup</Button>
               </DrawerClose>
-
-              {donation.status === 'pending_verification' && (
-                <>
-                  {onVerify && (
-                    <Button
-                      onClick={() => onVerify(donation.id)}
-                      disabled={isVerifying || isRejecting}
-                      className='flex-1 bg-green-500 hover:bg-green-600'
-                    >
-                      <CheckCircle className='w-4 h-4 mr-2' />
-                      {isVerifying ? 'Memverifikasi...' : 'Verifikasi'}
-                    </Button>
-                  )}
-                  {onReject && (
-                    <Button
-                      onClick={() => onReject(donation.id)}
-                      disabled={isVerifying || isRejecting}
-                      variant='outline'
-                      className='flex-1 border-red-200 text-red-700 hover:bg-red-50'
-                    >
-                      <XCircle className='w-4 h-4 mr-2' />
-                      {isRejecting ? 'Menolak...' : 'Tolak'}
-                    </Button>
-                  )}
-                </>
-              )}
-
-              {donation.status === 'verified' && onConfirm && (
-                <Button
-                  onClick={() => onConfirm(donation.id)}
-                  disabled={isConfirming}
-                  className='flex-1 bg-blue-500 hover:bg-blue-600'
-                >
-                  <CheckCircle className='w-4 h-4 mr-2' />
-                  {isConfirming ? 'Mengkonfirmasi...' : 'Konfirmasi'}
-                </Button>
-              )}
-            </div>
+            </DrawerFooter>
           </div>
         </div>
       </DrawerContent>
