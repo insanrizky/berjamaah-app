@@ -48,9 +48,14 @@ export default function Header() {
                       className='w-full h-full object-cover'
                     />
                   </div>
-                  <span className='text-lg font-semibold text-gray-900 dark:text-white'>
-                    Admin Portal
-                  </span>
+                  <div className='flex flex-col'>
+                    <span className='text-lg font-semibold text-gray-900 dark:text-white leading-tight'>
+                      Berjamaah POSKU Bandung
+                    </span>
+                    <span className='text-xs text-blue-600 dark:text-blue-400 leading-none'>
+                      Admin Portal
+                    </span>
+                  </div>
                 </div>
               </Link>
             )}

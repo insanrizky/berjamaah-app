@@ -15,8 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Berjamaah POSKU Bandung',
-  description: 'Berjamaah POSKU Bandung',
+  title: {
+    template: '%s - Berjamaah POSKU Bandung',
+    default: 'Program Donasi - Berjamaah POSKU Bandung',
+  },
+  description: 'Platform donasi dan kegiatan sosial Berjamaah POSKU Bandung. Berpartisipasi dalam program-program kebaikan untuk masyarakat.',
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
