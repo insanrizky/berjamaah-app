@@ -4,14 +4,11 @@ import { Button } from '@/components/ui/button';
 import { SearchInput } from './SearchInput';
 import { StatusSelect } from './StatusSelect';
 import { RoleSelect } from './RoleSelect';
+import type { UserFilters } from '../types';
 
 interface UserFilterDrawerProps {
-  filters: {
-    search: string;
-    status: string;
-    role: string;
-  };
-  onFiltersChange: (filters: Partial<{ search: string; status: string; role: string }>) => void;
+  filters: UserFilters;
+  onFiltersChange: (filters: Partial<UserFilters>) => void;
   onApply: () => void;
   onReset: () => void;
 }
@@ -27,11 +24,11 @@ export function UserFilterDrawer({
   };
 
   const handleStatusChange = (value: string) => {
-    onFiltersChange({ status: value });
+    onFiltersChange({ status: value as UserFilters['status'] });
   };
 
   const handleRoleChange = (value: string) => {
-    onFiltersChange({ role: value });
+    onFiltersChange({ role: value as UserFilters['role'] });
   };
 
   return (
@@ -53,10 +50,7 @@ export function UserFilterDrawer({
         <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>
           Status Pengguna
         </label>
-        <StatusSelect
-          value={filters.status}
-          onChange={handleStatusChange}
-        />
+        <StatusSelect value={filters.status} onChange={handleStatusChange} />
       </div>
 
       {/* Role Filter */}
@@ -64,25 +58,15 @@ export function UserFilterDrawer({
         <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>
           Peran Pengguna
         </label>
-        <RoleSelect
-          value={filters.role}
-          onChange={handleRoleChange}
-        />
+        <RoleSelect value={filters.role} onChange={handleRoleChange} />
       </div>
 
       {/* Action Buttons */}
       <div className='flex gap-3 pt-4'>
-        <Button
-          variant='outline'
-          onClick={onReset}
-          className='flex-1'
-        >
+        <Button variant='outline' onClick={onReset} className='flex-1'>
           Reset
         </Button>
-        <Button
-          onClick={onApply}
-          className='flex-1'
-        >
+        <Button onClick={onApply} className='flex-1'>
           Terapkan
         </Button>
       </div>

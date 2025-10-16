@@ -1,8 +1,6 @@
 'use client';
 
-interface UsersHeaderProps {}
-
-export function UsersHeader({}: UsersHeaderProps) {
+export function UsersHeader() {
   return (
     <div>
       <h1 className='text-lg font-semibold text-gray-900 dark:text-white'>
