@@ -14,6 +14,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -36,6 +45,10 @@ import {
   UserPlus,
   Send,
   Loader2,
+  Mail,
+  Phone,
+  Calendar,
+  Banknote,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
@@ -74,6 +87,8 @@ export function UserListCard({
 }: UserListCardProps) {
   const limit = 10;
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showAdminDialog, setShowAdminDialog] = useState(false);
   const [showUserDialog, setShowUserDialog] = useState(false);
   const [showResendDialog, setShowResendDialog] = useState(false);
@@ -174,6 +189,20 @@ export function UserListCard({
     setShowResendDialog(true);
   };
 
+  // Handle user selection for drawer
+  const handleUserSelect = (user: User) => {
+    setSelectedUserId(user.id);
+    setSelectedUser(user);
+    setIsDrawerOpen(true);
+  };
+
+  // Handle drawer close
+  const handleDrawerClose = () => {
+    setIsDrawerOpen(false);
+    setSelectedUserId(null);
+    setSelectedUser(null);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -227,7 +256,8 @@ export function UserListCard({
             {users.map(user => (
               <Card
                 key={user.id}
-                className='py-0 gap-0 hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700'
+                className='py-0 gap-0 hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700 cursor-pointer'
+                onClick={() => handleUserSelect(user)}
               >
                 <CardContent className='px-4 pt-4'>
                   <div className='flex items-start justify-between gap-3'>
@@ -416,6 +446,148 @@ export function UserListCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* User Detail Drawer */}
+      {selectedUserId && selectedUser && (
+        <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+          <DrawerContent>
+            <div className='mx-auto w-full max-w-md h-[80vh] flex flex-col overflow-y-auto'>
+              <DrawerHeader className='flex-shrink-0'>
+                <DrawerTitle>Detail Pengguna</DrawerTitle>
+                <DrawerDescription>
+                  Informasi lengkap tentang pengguna ini
+                </DrawerDescription>
+              </DrawerHeader>
+              <div className='flex-1 px-4 pb-4'>
+                {/* Dummy Content */}
+                <div className='space-y-6'>
+                  {/* User Info Section */}
+                  <div className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4'>
+                    <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-4'>
+                      Informasi Pengguna
+                    </h3>
+                    <div className='space-y-3'>
+                      <div className='flex items-center gap-3'>
+                        <User className='w-5 h-5 text-gray-400' />
+                        <div>
+                          <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                            {selectedUser.fullName || 'Nama tidak tersedia'}
+                          </p>
+                          <p className='text-xs text-gray-600 dark:text-gray-400'>
+                            Nama Lengkap
+                          </p>
+                        </div>
+                      </div>
+                      <div className='flex items-center gap-3'>
+                        <Mail className='w-5 h-5 text-gray-400' />
+                        <div>
+                          <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                            {selectedUser.email}
+                          </p>
+                          <p className='text-xs text-gray-600 dark:text-gray-400'>
+                            Email
+                          </p>
+                        </div>
+                      </div>
+                      <div className='flex items-center gap-3'>
+                        <Phone className='w-5 h-5 text-gray-400' />
+                        <div>
+                          <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                            {selectedUser.phone || 'Tidak tersedia'}
+                          </p>
+                          <p className='text-xs text-gray-600 dark:text-gray-400'>
+                            Nomor Telepon
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status & Role Section */}
+                  <div className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4'>
+                    <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-4'>
+                      Status & Role
+                    </h3>
+                    <div className='space-y-3'>
+                      <div className='flex items-center justify-between'>
+                        <span className='text-sm text-gray-600 dark:text-gray-400'>
+                          Status
+                        </span>
+                        <Badge
+                          variant='secondary'
+                          className={`text-xs px-2 py-1 ${getStatusColor(selectedUser.status)}`}
+                        >
+                          {getStatusText(selectedUser.status)}
+                        </Badge>
+                      </div>
+                      <div className='flex items-center justify-between'>
+                        <span className='text-sm text-gray-600 dark:text-gray-400'>
+                          Role
+                        </span>
+                        <Badge variant='outline' className='text-xs px-2 py-1'>
+                          {getRoleText(selectedUser.role)}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Activity Section */}
+                  <div className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4'>
+                    <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-4'>
+                      Aktivitas
+                    </h3>
+                    <div className='space-y-3'>
+                      <div className='flex items-center gap-3'>
+                        <Calendar className='w-5 h-5 text-gray-400' />
+                        <div>
+                          <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                            {formatDate(selectedUser.createdAt)}
+                          </p>
+                          <p className='text-xs text-gray-600 dark:text-gray-400'>
+                            Tanggal Bergabung
+                          </p>
+                        </div>
+                      </div>
+                      <div className='flex items-center gap-3'>
+                        <Banknote className='w-5 h-5 text-gray-400' />
+                        <div>
+                          <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                            {selectedUser.totalDonations || 0} donasi
+                          </p>
+                          <p className='text-xs text-gray-600 dark:text-gray-400'>
+                            Total Donasi
+                          </p>
+                        </div>
+                      </div>
+                      <div className='flex items-center gap-3'>
+                        <Banknote className='w-5 h-5 text-gray-400' />
+                        <div>
+                          <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                            Rp{' '}
+                            {selectedUser.totalAmount?.toLocaleString(
+                              'id-ID'
+                            ) || '0'}
+                          </p>
+                          <p className='text-xs text-gray-600 dark:text-gray-400'>
+                            Total Nominal Donasi
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <DrawerFooter className='flex-shrink-0'>
+                <DrawerClose asChild>
+                  <Button variant='outline' onClick={handleDrawerClose}>
+                    Tutup
+                  </Button>
+                </DrawerClose>
+              </DrawerFooter>
+            </div>
+          </DrawerContent>
+        </Drawer>
+      )}
     </div>
   );
 }
