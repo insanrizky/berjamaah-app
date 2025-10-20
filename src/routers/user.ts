@@ -732,7 +732,7 @@ function generateToken(length = 48) {
 // Helper function to send activation email
 async function sendActivationEmail(email: string, activationUrl: string) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM || 'noreply@berjamaah.id';
+  const from = process.env.RESEND_FROM || 'noreply@poskubandung.org';
 
   if (!apiKey) {
     throw new Error('Email service not configured');
@@ -765,7 +765,7 @@ async function sendActivationEmail(email: string, activationUrl: string) {
 // Helper function to send password reset email
 async function sendPasswordResetEmail(email: string, resetUrl: string) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM || 'noreply@berjamaah.id';
+  const from = process.env.RESEND_FROM || 'noreply@poskubandung.org';
 
   if (!apiKey) {
     throw new Error('Email service not configured');

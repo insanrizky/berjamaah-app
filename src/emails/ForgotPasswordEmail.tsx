@@ -25,7 +25,7 @@ export function ForgotPasswordEmail({
   appName = 'Berjamaah POSKU Bandung',
   logoUrl = `${process.env.NEXT_PUBLIC_SERVER_URL || ''}/favicon.ico`,
   resetUrl,
-  supportEmail = 'support@berjamaah.id',
+  supportEmail = 'support@poskubandung.org',
 }: ForgotPasswordEmailProps) {
   const preview = `Reset password ${appName}. Klik tautan untuk mengatur password baru.`;
 

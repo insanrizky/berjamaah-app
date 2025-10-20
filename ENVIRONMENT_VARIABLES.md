@@ -58,7 +58,7 @@ These variables enable specific features but the app will work without them.
 - **Purpose**: Default sender email address
 - **Format**: Valid email address
 - **Example**: `noreply@yourdomain.com`
-- **Default**: `noreply@berjamaah.id`
+- **Default**: `noreply@poskubandung.org`
 
 ### **File Upload Service (Image Storage)**
 

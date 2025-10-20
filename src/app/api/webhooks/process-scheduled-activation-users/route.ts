@@ -15,7 +15,7 @@ function generateToken(length = 48) {
 
 async function sendActivationEmail(email: string, activationUrl: string) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM || 'noreply@berjamaah.id';
+  const from = process.env.RESEND_FROM || 'noreply@poskubandung.org';
   if (!apiKey) return;
   const resend = new Resend(apiKey);
   const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Berjamaah POSKU Bandung';
