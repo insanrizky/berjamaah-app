@@ -97,10 +97,9 @@ export default function StatusPage() {
                   size='sm'
                   onClick={handleRefresh}
                   disabled={healthCheck.isLoading}
+                  loading={healthCheck.isLoading}
                 >
-                  <RefreshCw
-                    className={`h-4 w-4 mr-2 ${healthCheck.isLoading ? 'animate-spin' : ''}`}
-                  />
+                  <RefreshCw className='h-4 w-4 mr-2' />
                   Refresh
                 </Button>
               </div>

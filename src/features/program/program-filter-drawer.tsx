@@ -90,10 +90,8 @@ export function ProgramFilterDrawer({
                     <SelectContent>
                       <SelectItem value='all'>Semua Status</SelectItem>
                       <SelectItem value='active'>Aktif</SelectItem>
-                      <SelectItem value='ended'>Selesai</SelectItem>
-                      <SelectItem value='paused'>Dijeda</SelectItem>
+                      <SelectItem value='inactive'>Tidak Aktif</SelectItem>
                       <SelectItem value='draft'>Draft</SelectItem>
-                      <SelectItem value='pending'>Menunggu</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormControl>

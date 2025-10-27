@@ -76,16 +76,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                   children: (
                     <>
                       {loading && (
-                        <Loader2
-                          className={cn(
-                            'h-4 w-4 animate-spin',
-                            children && 'mr-2'
-                          )}
-                        />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                       )}
-                      {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
-                      {/* @ts-ignore */}
-                      {child?.props.children}
+                      {!loading && (
+                        <>
+                          {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+                          {/* @ts-ignore */}
+                          {child?.props.children}
+                        </>
+                      )}
                     </>
                   ),
                 });
@@ -111,13 +110,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         <>
           {loading && (
-            <Loader2
-              className={cn('h-4 w-4 animate-spin', children && 'mr-2')}
-            />
+            <Loader2 className="h-4 w-4 animate-spin" />
           )}
-          {beforeIcon}
-          {!iconOnly && children}
-          {afterIcon}
+          {!loading && (
+            <>
+              {beforeIcon}
+              {!iconOnly && children}
+              {afterIcon}
+            </>
+          )}
         </>
       </button>
     );

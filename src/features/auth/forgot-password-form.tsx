@@ -107,8 +107,9 @@ export default function ForgotPasswordForm() {
           type='submit'
           className='w-full'
           disabled={form.formState.isSubmitting}
+          loading={form.formState.isSubmitting}
         >
-          {form.formState.isSubmitting ? 'Mengirim...' : 'Kirim Link Reset'}
+          Kirim Link Reset
         </Button>
       </form>
     </Form>

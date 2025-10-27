@@ -443,15 +443,9 @@ export function UserListCard({
                 selectedUser && handleResendActivation(selectedUser)
               }
               disabled={isResendingActivation}
+              loading={isResendingActivation}
             >
-              {isResendingActivation ? (
-                <>
-                  <Loader2 className='w-4 h-4 mr-2 animate-spin' />
-                  Mengirim...
-                </>
-              ) : (
-                'Kirim Email Aktivasi'
-              )}
+              Kirim Email Aktivasi
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -651,13 +645,12 @@ export function UserListCard({
                             <Button
                               onClick={() => openResendDialog(selectedUser)}
                               disabled={isResendingActivation}
+                              loading={isResendingActivation}
                               variant='outline'
                               className='w-full'
                             >
                               <Send className='w-4 h-4 mr-2' />
-                              {isResendingActivation
-                                ? 'Mengirim...'
-                                : 'Kirim Ulang Email Aktivasi'}
+                              Kirim Ulang Email Aktivasi
                             </Button>
                           </div>
                         )}

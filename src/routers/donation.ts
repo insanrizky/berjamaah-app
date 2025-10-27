@@ -29,14 +29,6 @@ export const donationRouter = router({
                 bannerImage: true,
               },
             },
-            programPeriod: {
-              select: {
-                id: true,
-                startDate: true,
-                endDate: true,
-                cycleNumber: true,
-              },
-            },
           },
           orderBy: {
             createdAt: 'desc',
@@ -86,15 +78,6 @@ export const donationRouter = router({
                 category: true,
                 bannerImage: true,
                 targetAmount: true,
-              },
-            },
-            programPeriod: {
-              select: {
-                id: true,
-                startDate: true,
-                endDate: true,
-                cycleNumber: true,
-                currentAmount: true,
               },
             },
             // single image now stored on donation
@@ -183,24 +166,8 @@ export const donationRouter = router({
             bannerImage: true,
             category: true,
             status: true,
-            programType: true,
             contact: true,
             createdAt: true,
-            programPeriods: {
-              where: {
-                startDate: { lte: new Date() },
-                endDate: { gte: new Date() },
-              },
-              select: {
-                id: true,
-                startDate: true,
-                endDate: true,
-                currentAmount: true,
-                cycleNumber: true,
-              },
-              orderBy: { startDate: 'desc' },
-              take: 1,
-            },
             // Optimized: Only get verified donations with minimal fields
             donations: {
               where: {
@@ -349,7 +316,6 @@ export const donationRouter = router({
             donorEmail: input.donorEmail,
             donorPhone: input.donorPhone,
             programId: input.programId,
-            programPeriodId: null,
             amount: input.amount,
             paymentMethod: input.paymentMethod,
             userBankAccountId: bankAccountId,
@@ -538,14 +504,6 @@ export const donationRouter = router({
                   bannerImage: true,
                 },
               },
-              programPeriod: {
-                select: {
-                  id: true,
-                  startDate: true,
-                  endDate: true,
-                  cycleNumber: true,
-                },
-              },
               verifiedByAdmin: {
                 select: {
                   id: true,
@@ -664,14 +622,6 @@ export const donationRouter = router({
                 bannerImage: true,
               },
             },
-            programPeriod: {
-              select: {
-                id: true,
-                startDate: true,
-                endDate: true,
-                cycleNumber: true,
-              },
-            },
             verifiedByAdmin: {
               select: {
                 id: true,
@@ -727,12 +677,6 @@ export const donationRouter = router({
                 title: true,
               },
             },
-            programPeriod: {
-              select: {
-                id: true,
-                currentAmount: true,
-              },
-            },
           },
         });
 
@@ -767,15 +711,6 @@ export const donationRouter = router({
                 bannerImage: true,
               },
             },
-            programPeriod: {
-              select: {
-                id: true,
-                startDate: true,
-                endDate: true,
-                cycleNumber: true,
-                currentAmount: true,
-              },
-            },
             verifiedByAdmin: {
               select: {
                 id: true,
@@ -785,20 +720,6 @@ export const donationRouter = router({
             },
           },
         });
-
-        // Update program period current amount if applicable
-        if (donation.programPeriodId && donation.programPeriod) {
-          const currentAmount = Number(donation.programPeriod.currentAmount);
-          const donationAmount = Number(donation.amount);
-
-          await prisma.programPeriod.update({
-            where: { id: donation.programPeriodId },
-            data: {
-              currentAmount: currentAmount + donationAmount,
-              updatedAt: new Date(),
-            },
-          });
-        }
 
         return {
           success: true,

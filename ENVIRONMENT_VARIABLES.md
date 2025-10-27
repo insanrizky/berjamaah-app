@@ -83,12 +83,6 @@ These variables enable specific features but the app will work without them.
 - **Purpose**: Name of the R2 bucket for file storage
 - **Example**: `berjamaah-uploads`
 
-#### `CLOUDFLARE_R2_PUBLIC_URL`
-
-- **Purpose**: Public URL for accessing uploaded files
-- **Format**: `https://pub-abc123.r2.dev`
-- **Obtain**: Cloudflare Dashboard > R2 > Custom domains
-
 #### `CLOUDFLARE_R2_REGION`
 
 - **Purpose**: R2 region (usually auto for Cloudflare)

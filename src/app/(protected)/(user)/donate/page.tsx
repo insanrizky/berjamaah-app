@@ -25,12 +25,6 @@ type DonationFromAPI = {
     category: string | null;
     bannerImage: string | null;
   };
-  programPeriod: {
-    id: string;
-    startDate: string | null;
-    endDate: string | null;
-    cycleNumber: number | null;
-  } | null;
 } & Record<string, unknown>;
 
 export default function DonatePage() {
@@ -65,18 +59,6 @@ export default function DonatePage() {
           | 'verified'
           | 'confirmed'
           | 'rejected',
-        programPeriod: donation.programPeriod
-          ? {
-              ...donation.programPeriod,
-              startDate: donation.programPeriod.startDate || '',
-              endDate: donation.programPeriod.endDate || '',
-            }
-          : {
-              id: 'no-period',
-              startDate: '',
-              endDate: '',
-              cycleNumber: null,
-            },
       }))
     ) ?? [];
 

@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -19,17 +18,26 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getImageUrl } from '@/utils/image-url';
+import { ClickableImage } from '@/components/shared/image-preview';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import {
-  Calendar,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import {
   Target,
   Users,
   Banknote,
   FileText,
-  Phone,
-  Tag,
   TrendingUp,
   Shield,
 } from 'lucide-react';
@@ -41,7 +49,6 @@ interface Program {
   targetAmount: string; // Changed from number to string to match database
   category: string | null;
   status: string; // Changed to string to match database return type
-  programType: string; // Changed to string to match database return type
   contact?: string | null;
   details?: string | null;
   bannerImage?: string | null;
@@ -52,18 +59,6 @@ interface Program {
     id: string;
     fullName: string | null;
   } | null;
-  programPeriods: Array<{
-    id: string;
-    startDate: string | null;
-    endDate: string | null;
-    currentAmount: string; // Changed from number to string to match database
-    cycleNumber?: number | null;
-    recurringFrequency?: string | null;
-    recurringDay?: number | null;
-    recurringDurationDays?: number | null;
-    totalCycles?: number | null;
-    nextActivationDate?: string | null;
-  }>;
   // donations array is not included in getById query, only _count.donations
   _count: {
     donations: number;
@@ -101,6 +96,15 @@ export function ProgramDetailDrawer({
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditingImage, setIsEditingImage] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [editingFields, setEditingFields] = useState<Record<string, boolean>>(
+    {}
+  );
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  const [newCategory, setNewCategory] = useState('');
+  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
 
   const deleteProgramMutation = useMutation({
     mutationFn: async (programId: string) => {
@@ -129,7 +133,7 @@ export function ProgramDetailDrawer({
     }) => {
       return await trpcClient.program.updateProgramStatus.mutate({
         id: programId,
-        status: status as 'draft' | 'pending' | 'active' | 'paused' | 'ended',
+        status: status as 'draft' | 'active' | 'inactive',
       });
     },
     onSuccess: () => {
@@ -145,6 +149,66 @@ export function ProgramDetailDrawer({
     },
   });
 
+  const updateProgramMutation = useMutation({
+    mutationFn: async (updateData: { id: string; bannerImage: string }) => {
+      return await trpcClient.program.update.mutate(updateData);
+    },
+    onSuccess: () => {
+      toast.success('Gambar program berhasil diperbarui');
+      queryClient.invalidateQueries({ queryKey: ['programs'] });
+      queryClient.invalidateQueries({ queryKey: ['program', programId] });
+      setIsEditingImage(false);
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (error: any) => {
+      toast.error(error.message || 'Gagal memperbarui gambar program');
+    },
+  });
+
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Upload failed');
+      }
+
+      const result = await response.json();
+
+      if (!result.success || !result.url) {
+        throw new Error('Invalid response from upload service');
+      }
+
+      // Update the program with the new image URL
+      updateProgramMutation.mutate({
+        id: programId,
+        bannerImage: result.url,
+      });
+    } catch (error: unknown) {
+      console.error('Upload error:', error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Gagal mengupload gambar. Silakan coba lagi.';
+      toast.error(errorMessage);
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
   const handleDeleteProgram = () => {
     if (program) {
       deleteProgramMutation.mutate(program.id);
@@ -157,28 +221,65 @@ export function ProgramDetailDrawer({
     }
   };
 
+  const handleEditField = (fieldName: string) => {
+    if (!program) return;
+
+    setEditingFields(prev => ({ ...prev, [fieldName]: true }));
+
+    // Set initial value for the field
+    const initialValue = (program[fieldName as keyof Program] as string) || '';
+    setFieldValues(prev => ({ ...prev, [fieldName]: initialValue }));
+  };
+
+  const handleCancelFieldEdit = (fieldName: string) => {
+    setEditingFields(prev => ({ ...prev, [fieldName]: false }));
+    setFieldValues(prev => ({ ...prev, [fieldName]: '' }));
+  };
+
+  const handleSaveField = async (fieldName: string) => {
+    if (!program) return;
+
+    const value = fieldValues[fieldName];
+    if (!value) return;
+
+    try {
+      const updateData = {
+        id: programId,
+        [fieldName]: fieldName === 'targetAmount' ? Number(value) : value,
+      };
+
+      await trpcClient.program.update.mutate(updateData);
+
+      toast.success(`${fieldName} berhasil diperbarui`);
+      queryClient.invalidateQueries({ queryKey: ['programs'] });
+      queryClient.invalidateQueries({ queryKey: ['program', programId] });
+
+      setEditingFields(prev => ({ ...prev, [fieldName]: false }));
+      setFieldValues(prev => ({ ...prev, [fieldName]: '' }));
+    } catch {
+      toast.error(`Gagal memperbarui ${fieldName}`);
+    }
+  };
+
   const getAvailableStatusActions = (currentStatus: string) => {
     const statusActions: Record<
       string,
       Array<{ status: string; label: string; variant: string }>
     > = {
       draft: [
-        { status: 'pending', label: 'Ajukan untuk Review', variant: 'default' },
-        { status: 'active', label: 'Aktifkan', variant: 'default' },
-      ],
-      pending: [
-        { status: 'active', label: 'Aktifkan', variant: 'default' },
-        { status: 'draft', label: 'Kembali ke Draft', variant: 'outline' },
+        { status: 'active', label: 'Mulai Program', variant: 'default' },
+        {
+          status: 'inactive',
+          label: 'Nonaktifkan Program',
+          variant: 'outline',
+        },
       ],
       active: [
-        { status: 'paused', label: 'Jeda Program', variant: 'outline' },
-        { status: 'ended', label: 'Akhiri Program', variant: 'destructive' },
+        { status: 'inactive', label: 'Akhiri Program', variant: 'destructive' },
       ],
-      paused: [
-        { status: 'active', label: 'Lanjutkan Program', variant: 'default' },
-        { status: 'ended', label: 'Akhiri Program', variant: 'destructive' },
+      inactive: [
+        { status: 'active', label: 'Mulai Program', variant: 'default' },
       ],
-      ended: [{ status: 'active', label: 'Buka Kembali', variant: 'default' }],
     };
 
     return statusActions[currentStatus] || [];
@@ -207,14 +308,10 @@ export function ProgramDetailDrawer({
     switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'ended':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'paused':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'draft':
+      case 'inactive':
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-      case 'pending':
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+      case 'draft':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
@@ -224,14 +321,10 @@ export function ProgramDetailDrawer({
     switch (status) {
       case 'active':
         return 'Aktif';
-      case 'ended':
-        return 'Selesai';
-      case 'paused':
-        return 'Dijeda';
+      case 'inactive':
+        return 'Tidak Aktif';
       case 'draft':
         return 'Draft';
-      case 'pending':
-        return 'Menunggu';
       default:
         return 'Tidak Diketahui';
     }
@@ -244,6 +337,16 @@ export function ProgramDetailDrawer({
 
     return fullName || 'Tidak diketahui';
   };
+
+  const categories = [
+    'Pendidikan',
+    'Kesehatan',
+    'Keagamaan',
+    'Bencana',
+    'Infrastruktur',
+    'Sosial',
+    'Lainnya',
+  ];
 
   if (!isOpen) return null;
 
@@ -271,49 +374,6 @@ export function ProgramDetailDrawer({
     );
   }
 
-  // Get the latest period for date information
-  const latestPeriod = program.programPeriods[0];
-
-  const displayPeriodDate = (date: string | null) => {
-    if (date !== '1970-01-01T00:00:00.000Z' && date !== null)
-      return formatDateTime(date);
-    return '~';
-  };
-
-  const getDateAlertInfo = (
-    startDate: string | null,
-    endDate: string | null
-  ) => {
-    const isStartEmpty = !startDate || startDate === '1970-01-01T00:00:00.000Z';
-    const isEndEmpty = !endDate || endDate === '1970-01-01T00:00:00.000Z';
-
-    if (isStartEmpty && isEndEmpty) {
-      return {
-        type: 'warning' as const,
-        message:
-          '⚠️ Tanggal mulai dan selesai belum ditentukan. Program dapat berjalan tanpa batas waktu.',
-      };
-    } else if (isStartEmpty) {
-      return {
-        type: 'info' as const,
-        message:
-          'ℹ️ Tanggal mulai belum ditentukan. Program akan dimulai kapan saja.',
-      };
-    } else if (isEndEmpty) {
-      return {
-        type: 'info' as const,
-        message:
-          'ℹ️ Tanggal selesai belum ditentukan. Program akan berjalan tanpa batas waktu.',
-      };
-    } else {
-      return {
-        type: 'success' as const,
-        message:
-          '✅ Program memiliki jadwal yang jelas dengan tanggal mulai dan selesai.',
-      };
-    }
-  };
-
   return (
     <div className='space-y-6'>
       {/* Header with Title and Status */}
@@ -332,16 +392,76 @@ export function ProgramDetailDrawer({
       {/* Banner Image */}
       {program.bannerImage && (
         <div className='w-full'>
-          <img
-            src={program.bannerImage}
-            alt={`Banner ${program.title}`}
-            className='w-full h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-700'
-            onError={e => {
-              e.currentTarget.style.display = 'none';
-            }}
-          />
+          <div className='relative aspect-square overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+            <ClickableImage
+              src={getImageUrl(program.bannerImage)}
+              alt={`Banner ${program.title}`}
+              className='w-full h-full object-cover'
+              onError={e => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            {/* Edit Image Button - Only show for draft programs */}
+            {session?.user?.id === program.createdBy &&
+              program.status === 'draft' && (
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='absolute top-2 right-2 bg-white/90 hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-800 z-10'
+                  onClick={e => {
+                    e.stopPropagation();
+                    setIsEditingImage(true);
+                  }}
+                >
+                  <svg
+                    className='w-4 h-4 mr-1'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                    />
+                  </svg>
+                  Edit
+                </Button>
+              )}
+          </div>
         </div>
       )}
+
+      {/* Add Image Button (if no image exists) - Only show for draft programs */}
+      {!program.bannerImage &&
+        session?.user?.id === program.createdBy &&
+        program.status === 'draft' && (
+          <div className='w-full'>
+            <Button
+              variant='outline'
+              className='w-full h-32 border-dashed border-2 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+              onClick={() => setIsEditingImage(true)}
+            >
+              <div className='text-center'>
+                <svg
+                  className='w-8 h-8 mx-auto mb-2 text-gray-400'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M12 6v6m0 0v6m0-6h6m-6 0H6'
+                  />
+                </svg>
+                <p className='text-sm text-gray-500'>Tambah Gambar Banner</p>
+              </div>
+            </Button>
+          </div>
+        )}
 
       {/* Program Information Section */}
       <Card className='gap-0'>
@@ -352,57 +472,457 @@ export function ProgramDetailDrawer({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className='space-y-3'>
-            <div className='flex items-center gap-3'>
-              <Tag className='w-5 h-5 text-gray-400' />
-              <div>
-                <p className='text-sm font-medium text-gray-900 dark:text-white'>
-                  {program.category || 'Tidak ada kategori'}
-                </p>
-                <p className='text-xs text-gray-600 dark:text-gray-400'>
-                  Kategori
-                </p>
+          <div className='space-y-4'>
+            {/* Title Field */}
+            <div className='space-y-2'>
+              <div className='flex items-center justify-between'>
+                <Label className='text-sm font-medium'>Judul Program</Label>
+                {program.status === 'draft' &&
+                  session?.user?.id === program.createdBy && (
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => handleEditField('title')}
+                      className='h-6 w-6 p-0'
+                    >
+                      <svg
+                        className='w-3 h-3'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                        />
+                      </svg>
+                    </Button>
+                  )}
               </div>
-            </div>
-            <div className='flex items-start gap-3'>
-              <FileText className='w-5 h-5 text-gray-400 mt-0.5' />
-              <div className='flex-1'>
-                <p className='text-sm font-medium text-gray-900 dark:text-white mb-1'>
-                  Deskripsi
+              {editingFields.title ? (
+                <div className='space-y-2'>
+                  <Input
+                    value={fieldValues.title}
+                    onChange={e =>
+                      setFieldValues(prev => ({
+                        ...prev,
+                        title: e.target.value,
+                      }))
+                    }
+                    placeholder='Masukkan judul program'
+                  />
+                  <div className='flex gap-2'>
+                    <Button
+                      size='sm'
+                      onClick={() => handleSaveField('title')}
+                      className='h-7 px-3 text-xs'
+                    >
+                      Simpan
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => handleCancelFieldEdit('title')}
+                      className='h-7 px-3 text-xs'
+                    >
+                      Batal
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p className='text-sm text-gray-900 dark:text-white'>
+                  {program.title}
                 </p>
+              )}
+            </div>
+
+            {/* Description Field */}
+            <div className='space-y-2'>
+              <div className='flex items-center justify-between'>
+                <Label className='text-sm font-medium'>Deskripsi Program</Label>
+                {program.status === 'draft' &&
+                  session?.user?.id === program.createdBy && (
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => handleEditField('description')}
+                      className='h-6 w-6 p-0'
+                    >
+                      <svg
+                        className='w-3 h-3'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                        />
+                      </svg>
+                    </Button>
+                  )}
+              </div>
+              {editingFields.description ? (
+                <div className='space-y-2'>
+                  <Textarea
+                    value={fieldValues.description}
+                    onChange={e =>
+                      setFieldValues(prev => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
+                    placeholder='Deskripsikan program secara detail...'
+                    className='min-h-[100px] resize-none'
+                  />
+                  <div className='flex gap-2'>
+                    <Button
+                      size='sm'
+                      onClick={() => handleSaveField('description')}
+                      className='h-7 px-3 text-xs'
+                    >
+                      Simpan
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => handleCancelFieldEdit('description')}
+                      className='h-7 px-3 text-xs'
+                    >
+                      Batal
+                    </Button>
+                  </div>
+                </div>
+              ) : (
                 <p className='text-sm text-gray-600 dark:text-gray-400'>
                   {program.description}
                 </p>
-              </div>
+              )}
             </div>
 
-            {program.details && (
-              <div className='flex items-start gap-3'>
-                <FileText className='w-5 h-5 text-gray-400 mt-0.5' />
-                <div className='flex-1'>
-                  <p className='text-sm font-medium text-gray-900 dark:text-white mb-1'>
-                    Detail Program
-                  </p>
-                  <p className='text-sm text-gray-600 dark:text-gray-400'>
-                    {program.details}
-                  </p>
-                </div>
+            {/* Target Amount Field */}
+            <div className='space-y-2'>
+              <div className='flex items-center justify-between'>
+                <Label className='text-sm font-medium'>
+                  Target Dana (Rupiah)
+                </Label>
+                {program.status === 'draft' &&
+                  session?.user?.id === program.createdBy && (
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => handleEditField('targetAmount')}
+                      className='h-6 w-6 p-0'
+                    >
+                      <svg
+                        className='w-3 h-3'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                        />
+                      </svg>
+                    </Button>
+                  )}
               </div>
-            )}
+              {editingFields.targetAmount ? (
+                <div className='space-y-2'>
+                  <Input
+                    type='number'
+                    value={fieldValues.targetAmount}
+                    onChange={e =>
+                      setFieldValues(prev => ({
+                        ...prev,
+                        targetAmount: e.target.value,
+                      }))
+                    }
+                    placeholder='Masukkan target dana'
+                  />
+                  <div className='flex gap-2'>
+                    <Button
+                      size='sm'
+                      onClick={() => handleSaveField('targetAmount')}
+                      className='h-7 px-3 text-xs'
+                    >
+                      Simpan
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => handleCancelFieldEdit('targetAmount')}
+                      className='h-7 px-3 text-xs'
+                    >
+                      Batal
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p className='text-sm text-gray-900 dark:text-white'>
+                  {formatCurrency(Number(program.targetAmount))}
+                </p>
+              )}
+            </div>
 
-            {program.contact && (
+            {/* Category Field */}
+            <div className='space-y-2'>
+              <div className='flex items-center justify-between'>
+                <Label className='text-sm font-medium'>Kategori Program</Label>
+                {program.status === 'draft' &&
+                  session?.user?.id === program.createdBy && (
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => handleEditField('category')}
+                      className='h-6 w-6 p-0'
+                    >
+                      <svg
+                        className='w-3 h-3'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                        />
+                      </svg>
+                    </Button>
+                  )}
+              </div>
+              {editingFields.category ? (
+                <div className='space-y-2'>
+                  <Select
+                    value={fieldValues.category}
+                    onValueChange={value => {
+                      if (value === 'new') {
+                        setShowNewCategoryInput(true);
+                        setFieldValues(prev => ({ ...prev, category: '' }));
+                      } else {
+                        setShowNewCategoryInput(false);
+                        setFieldValues(prev => ({ ...prev, category: value }));
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder='Pilih kategori' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(category => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value='new'>
+                        + Tambah Kategori Baru
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {showNewCategoryInput && (
+                    <div className='flex gap-2'>
+                      <Input
+                        placeholder='Masukkan kategori baru'
+                        value={newCategory}
+                        onChange={e => setNewCategory(e.target.value)}
+                      />
+                      <Button
+                        type='button'
+                        onClick={() => {
+                          if (newCategory.trim()) {
+                            setFieldValues(prev => ({
+                              ...prev,
+                              category: newCategory.trim(),
+                            }));
+                            setNewCategory('');
+                            setShowNewCategoryInput(false);
+                          }
+                        }}
+                        size='sm'
+                      >
+                        Tambah
+                      </Button>
+                    </div>
+                  )}
+                  <div className='flex gap-2'>
+                    <Button
+                      size='sm'
+                      onClick={() => handleSaveField('category')}
+                      className='h-7 px-3 text-xs'
+                    >
+                      Simpan
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => handleCancelFieldEdit('category')}
+                      className='h-7 px-3 text-xs'
+                    >
+                      Batal
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p className='text-sm text-gray-900 dark:text-white'>
+                  {program.category || 'Tidak ada kategori'}
+                </p>
+              )}
+            </div>
+
+            {/* Contact Field */}
+            <div className='space-y-2'>
+              <div className='flex items-center justify-between'>
+                <Label className='text-sm font-medium'>Kontak</Label>
+                {program.status === 'draft' &&
+                  session?.user?.id === program.createdBy && (
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => handleEditField('contact')}
+                      className='h-6 w-6 p-0'
+                    >
+                      <svg
+                        className='w-3 h-3'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                        />
+                      </svg>
+                    </Button>
+                  )}
+              </div>
+              {editingFields.contact ? (
+                <div className='space-y-2'>
+                  <Input
+                    value={fieldValues.contact}
+                    onChange={e =>
+                      setFieldValues(prev => ({
+                        ...prev,
+                        contact: e.target.value,
+                      }))
+                    }
+                    placeholder='Nomor telepon atau email kontak'
+                  />
+                  <div className='flex gap-2'>
+                    <Button
+                      size='sm'
+                      onClick={() => handleSaveField('contact')}
+                      className='h-7 px-3 text-xs'
+                    >
+                      Simpan
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => handleCancelFieldEdit('contact')}
+                      className='h-7 px-3 text-xs'
+                    >
+                      Batal
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p className='text-sm text-gray-900 dark:text-white'>
+                  {program.contact || 'Tidak ada kontak'}
+                </p>
+              )}
+            </div>
+
+            {/* Details Field */}
+            <div className='space-y-2'>
+              <div className='flex items-center justify-between'>
+                <Label className='text-sm font-medium'>Detail Program</Label>
+                {program.status === 'draft' &&
+                  session?.user?.id === program.createdBy && (
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => handleEditField('details')}
+                      className='h-6 w-6 p-0'
+                    >
+                      <svg
+                        className='w-3 h-3'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                        />
+                      </svg>
+                    </Button>
+                  )}
+              </div>
+              {editingFields.details ? (
+                <div className='space-y-2'>
+                  <Textarea
+                    value={fieldValues.details}
+                    onChange={e =>
+                      setFieldValues(prev => ({
+                        ...prev,
+                        details: e.target.value,
+                      }))
+                    }
+                    placeholder='Detail tambahan tentang program...'
+                    className='min-h-[80px] resize-none'
+                  />
+                  <div className='flex gap-2'>
+                    <Button
+                      size='sm'
+                      onClick={() => handleSaveField('details')}
+                      className='h-7 px-3 text-xs'
+                    >
+                      Simpan
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => handleCancelFieldEdit('details')}
+                      className='h-7 px-3 text-xs'
+                    >
+                      Batal
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p className='text-sm text-gray-600 dark:text-gray-400'>
+                  {program.details || 'Tidak ada detail tambahan'}
+                </p>
+              )}
+            </div>
+
+            {/* Creator Info - Read Only */}
+            <div className='pt-4 border-t border-gray-200 dark:border-gray-700'>
               <div className='flex items-center gap-3'>
-                <Phone className='w-5 h-5 text-gray-400' />
+                <TrendingUp className='w-5 h-5 text-gray-400' />
                 <div>
                   <p className='text-sm font-medium text-gray-900 dark:text-white'>
-                    {program.contact}
+                    {getCreatorDisplayName(program)}
                   </p>
                   <p className='text-xs text-gray-600 dark:text-gray-400'>
-                    Kontak
+                    Dibuat oleh • {formatDateTime(program.createdAt)}
                   </p>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -475,79 +995,6 @@ export function ProgramDetailDrawer({
           </div>
         </CardContent>
       </Card>
-
-      {/* Schedule & Status Section */}
-      {latestPeriod && (
-        <Card className='gap-0'>
-          <CardHeader className='pb-3'>
-            <CardTitle className='text-sm font-medium flex items-center gap-2'>
-              <Calendar className='w-4 h-4' />
-              Jadwal Program
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='space-y-3'>
-              <div className='flex items-center gap-3'>
-                <Calendar className='w-5 h-5 text-gray-400' />
-                <div>
-                  <p className='text-sm font-medium text-gray-900 dark:text-white'>
-                    {displayPeriodDate(latestPeriod.startDate)}
-                  </p>
-                  <p className='text-xs text-gray-600 dark:text-gray-400'>
-                    Tanggal Mulai
-                  </p>
-                </div>
-              </div>
-
-              <div className='flex items-center gap-3'>
-                <Calendar className='w-5 h-5 text-gray-400' />
-                <div>
-                  <p className='text-sm font-medium text-gray-900 dark:text-white'>
-                    {displayPeriodDate(latestPeriod.endDate)}
-                  </p>
-                  <p className='text-xs text-gray-600 dark:text-gray-400'>
-                    Tanggal Selesai
-                  </p>
-                </div>
-              </div>
-
-              <div className='flex items-center gap-3'>
-                <TrendingUp className='w-5 h-5 text-gray-400' />
-                <div>
-                  <p className='text-sm font-medium text-gray-900 dark:text-white'>
-                    {getCreatorDisplayName(program)}
-                  </p>
-                  <p className='text-xs text-gray-600 dark:text-gray-400'>
-                    Dibuat oleh • {formatDateTime(program.createdAt)}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Date Alert */}
-            <Alert
-              className={`mt-4 ${
-                getDateAlertInfo(latestPeriod.startDate, latestPeriod.endDate)
-                  .type === 'warning'
-                  ? 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20'
-                  : getDateAlertInfo(
-                        latestPeriod.startDate,
-                        latestPeriod.endDate
-                      ).type === 'info'
-                    ? 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20'
-                    : 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20'
-              }`}
-            >
-              <AlertDescription className='text-sm'>
-                {
-                  getDateAlertInfo(latestPeriod.startDate, latestPeriod.endDate)
-                    .message
-                }
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Admin Actions - Only show if user is the creator */}
       {session?.user?.id === program?.createdBy && (
@@ -647,6 +1094,76 @@ export function ProgramDetailDrawer({
           </CardContent>
         </Card>
       )}
+
+      {/* Image Upload Dialog */}
+      <AlertDialog open={isEditingImage} onOpenChange={setIsEditingImage}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Update Gambar Banner</AlertDialogTitle>
+            <AlertDialogDescription>
+              Pilih gambar baru untuk banner program ini.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className='space-y-4'>
+            {/* Upload Area */}
+            <div className='border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6'>
+              <Label htmlFor='image-upload' className='cursor-pointer block'>
+                <div className='text-center space-y-2'>
+                  <svg
+                    className='w-12 h-12 mx-auto text-gray-400'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12'
+                    />
+                  </svg>
+                  <div className='text-sm text-gray-600 dark:text-gray-400'>
+                    <span className='font-medium'>Klik untuk upload</span> atau
+                    drag & drop
+                  </div>
+                  <p className='text-xs text-gray-500'>
+                    PNG, JPG, WEBP, GIF hingga 5MB
+                  </p>
+                </div>
+              </Label>
+              <Input
+                id='image-upload'
+                type='file'
+                accept='image/*'
+                className='hidden'
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleImageUpload(file);
+                  }
+                }}
+                disabled={uploading}
+              />
+            </div>
+
+            {/* Upload Progress */}
+            {uploading && (
+              <div className='space-y-2'>
+                <div className='flex justify-between text-sm'>
+                  <span>Mengupload gambar...</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <Progress value={uploadProgress} className='w-full' />
+              </div>
+            )}
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={uploading}>Batal</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

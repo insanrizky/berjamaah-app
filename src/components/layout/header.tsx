@@ -28,9 +28,14 @@ export default function Header() {
                       className='w-full h-full object-cover'
                     />
                   </div>
-                  <span className='text-lg font-semibold text-gray-900 dark:text-white'>
-                    Berjamaah - POSKU Bandung
-                  </span>
+                  <div className='flex flex-col'>
+                    <span className='text-lg font-semibold text-gray-900 dark:text-white leading-tight'>
+                      Berjamaah
+                    </span>
+                    <span className='text-xs text-green-600 dark:text-green-500 leading-none font-medium'>
+                      POSKU Bandung
+                    </span>
+                  </div>
                 </div>
               </Link>
             )}
@@ -39,7 +44,7 @@ export default function Header() {
             {isAdminRoute && (
               <Link href='/admin/home'>
                 <div className='flex items-center gap-2 cursor-pointer'>
-                  <div className='w-6 h-6 rounded-full flex items-center justify-center bg-blue-500 overflow-hidden'>
+                  <div className='w-6 h-6 rounded-full flex items-center justify-center bg-green-500 overflow-hidden'>
                     <Image
                       src='/logo.png'
                       alt='Berjamaah Logo'
@@ -50,9 +55,9 @@ export default function Header() {
                   </div>
                   <div className='flex flex-col'>
                     <span className='text-lg font-semibold text-gray-900 dark:text-white leading-tight'>
-                      Berjamaah
+                      Berjamaah Admin
                     </span>
-                    <span className='text-xs text-gray-600 dark:text-gray-400 leading-none'>
+                    <span className='text-xs text-green-600 dark:text-green-500 leading-none font-medium'>
                       POSKU Bandung
                     </span>
                   </div>

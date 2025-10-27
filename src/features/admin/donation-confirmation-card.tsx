@@ -355,20 +355,22 @@ export function DonationConfirmationCard({
                     size='sm'
                     onClick={handleVerify}
                     disabled={isVerifying || isRejecting}
+                    loading={isVerifying}
                     className='flex-1 text-xs h-8 bg-green-500 hover:bg-green-600'
                   >
                     <CheckCircle className='w-3 h-3 mr-1' />
-                    {isVerifying ? 'Verifikasi...' : 'Verifikasi'}
+                    Verifikasi
                   </Button>
                   <Button
                     size='sm'
                     onClick={handleReject}
                     disabled={isVerifying || isRejecting}
+                    loading={isRejecting}
                     variant='outline'
                     className='flex-1 text-xs h-8 border-red-200 text-red-700 hover:bg-red-50'
                   >
                     <XCircle className='w-3 h-3 mr-1' />
-                    {isRejecting ? 'Tolak...' : 'Tolak'}
+                    Tolak
                   </Button>
                 </>
               )}
@@ -378,10 +380,11 @@ export function DonationConfirmationCard({
                   size='sm'
                   onClick={handleConfirm}
                   disabled={isConfirming}
+                  loading={isConfirming}
                   className='flex-1 text-xs h-8 bg-blue-500 hover:bg-blue-600'
                 >
                   <CheckCircle className='w-3 h-3 mr-1' />
-                  {isConfirming ? 'Konfirmasi...' : 'Konfirmasi'}
+                  Konfirmasi
                 </Button>
               )}
             </div>

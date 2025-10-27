@@ -14,8 +14,8 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { formatCurrency } from '@/lib/currency-utils';
-import { trpc } from '@/utils/trpc';
+import { getImageUrl } from '@/utils/image-url';
+import { ClickableImage } from '@/components/shared/image-preview';
 import {
   CheckCircle,
   Clock,
@@ -111,22 +111,6 @@ export function DonationDetailDrawer({
           ...donationData.program,
           targetAmount: Number(donationData.program.targetAmount),
         },
-        programPeriod: donationData.programPeriod
-          ? {
-              ...donationData.programPeriod,
-              startDate: donationData.programPeriod.startDate || '',
-              endDate: donationData.programPeriod.endDate || '',
-              currentAmount: Number(
-                donationData.programPeriod.currentAmount || 0
-              ),
-            }
-          : {
-              id: '',
-              startDate: '',
-              endDate: '',
-              cycleNumber: null,
-              currentAmount: 0,
-            },
         verifiedByAdmin: donationData.verifiedByAdmin
           ? {
               ...donationData.verifiedByAdmin,
@@ -213,9 +197,9 @@ export function DonationDetailDrawer({
             <>
               {/* Banner Image */}
               {donation.program.bannerImage && (
-                <div className='w-full h-48 overflow-hidden rounded-lg'>
-                  <img
-                    src={donation.program.bannerImage}
+                <div className='w-full aspect-square overflow-hidden rounded-lg'>
+                  <ClickableImage
+                    src={getImageUrl(donation.program.bannerImage)}
                     alt={`Banner ${donation.program.title}`}
                     className='w-full h-full object-cover'
                     onError={e => {
@@ -421,13 +405,10 @@ export function DonationDetailDrawer({
                     <div className='grid grid-cols-1 gap-3'>
                       <div className='space-y-2'>
                         <div className='relative'>
-                          <img
-                            src={donation.donationProofImage}
+                          <ClickableImage
+                            src={getImageUrl(donation.donationProofImage)}
                             alt='Bukti Transfer'
                             className='w-full h-40 object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity'
-                            onClick={() =>
-                              setSelectedImage(donation.donationProofImage!)
-                            }
                           />
                         </div>
                       </div>

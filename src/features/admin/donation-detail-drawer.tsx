@@ -1,5 +1,5 @@
-/* eslint-disable @next/next/no-img-element */
-'use client';
+import { getImageUrl } from '@/utils/image-url';
+import { ClickableImage } from '@/components/shared/image-preview';
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -392,14 +392,11 @@ export function AdminDonationDetailDrawer({
                 <CardContent>
                   <div className='relative'>
                     {!imageError ? (
-                      <img
-                        src={donation.donationProofImage}
+                      <ClickableImage
+                        src={getImageUrl(donation.donationProofImage)}
                         alt='Bukti Pembayaran'
                         className='w-full max-w-md mx-auto rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity'
                         onError={() => setImageError(true)}
-                        onClick={() =>
-                          window.open(donation.donationProofImage!, '_blank')
-                        }
                       />
                     ) : (
                       <div className='w-full max-w-md mx-auto h-48 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center'>
@@ -475,21 +472,23 @@ export function AdminDonationDetailDrawer({
                           <Button
                             onClick={() => onVerify(donation.id)}
                             disabled={isVerifying || isRejecting}
+                            loading={isVerifying}
                             className='flex-1 bg-green-500 hover:bg-green-600'
                           >
                             <CheckCircle className='w-4 h-4 mr-2' />
-                            {isVerifying ? 'Memverifikasi...' : 'Verifikasi'}
+                            Verifikasi
                           </Button>
                         )}
                         {onReject && (
                           <Button
                             onClick={() => onReject(donation.id)}
                             disabled={isVerifying || isRejecting}
+                            loading={isRejecting}
                             variant='outline'
                             className='flex-1 border-red-200 text-red-700 hover:bg-red-50'
                           >
                             <XCircle className='w-4 h-4 mr-2' />
-                            {isRejecting ? 'Menolak...' : 'Tolak'}
+                            Tolak
                           </Button>
                         )}
                       </div>
@@ -504,10 +503,11 @@ export function AdminDonationDetailDrawer({
                       <Button
                         onClick={() => onConfirm(donation.id)}
                         disabled={isConfirming}
+                        loading={isConfirming}
                         className='w-full bg-blue-500 hover:bg-blue-600'
                       >
                         <CheckCircle className='w-4 h-4 mr-2' />
-                        {isConfirming ? 'Mengkonfirmasi...' : 'Konfirmasi'}
+                        Konfirmasi
                       </Button>
                     </div>
                   )}

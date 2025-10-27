@@ -153,10 +153,8 @@ function ProgramPageContent() {
               filters.status as
                 | 'all'
                 | 'draft'
-                | 'pending'
                 | 'active'
-                | 'paused'
-                | 'ended'
+                | 'inactive'
             }
             category={filters.category}
             onProgramSelect={handleProgramSelect}

@@ -80,7 +80,7 @@ export default function AdminDashboard() {
         if (!isAdmin)
           return {
             totalActivePrograms: 0,
-            totalEndedPrograms: 0,
+            totalInactivePrograms: 0,
             totalDonators: 0,
             totalDonationAmount: 0,
           };
@@ -91,7 +91,7 @@ export default function AdminDashboard() {
           console.error('Error loading program stats:', error);
           return {
             totalActivePrograms: 0,
-            totalEndedPrograms: 0,
+            totalInactivePrograms: 0,
             totalDonators: 0,
             totalDonationAmount: 0,
           };
@@ -125,7 +125,7 @@ export default function AdminDashboard() {
   const programs = programsData?.programs || [];
   const programStats = programStatsData || {
     totalActivePrograms: 0,
-    totalEndedPrograms: 0,
+    totalInactivePrograms: 0,
     totalDonators: 0,
     totalDonationAmount: 0,
   };
@@ -307,16 +307,16 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              {/* Completed Programs Card */}
+              {/* Inactive Programs Card */}
               <Card className='border-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02] col-span-2'>
                 <CardContent className='p-5'>
                   <div className='flex items-center justify-between'>
                     <div className='space-y-1'>
                       <p className='text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide'>
-                        Program Selesai
+                        Program Tidak Aktif
                       </p>
                       <p className='text-2xl font-bold text-gray-900 dark:text-gray-100'>
-                        {programStats.totalEndedPrograms}
+                        {programStats.totalInactivePrograms}
                       </p>
                     </div>
                     <div className='p-3 bg-gray-200 dark:bg-gray-600 rounded-xl'>

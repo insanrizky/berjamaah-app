@@ -1,7 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useState, useMemo, useEffect } from 'react';
+import { useForm, FormProvider } from 'react-hook-form';
+import Image from 'next/image';
+import { getImageUrl } from '@/utils/image-url';
+import { ClickableImage } from '@/components/shared/image-preview';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -333,7 +336,7 @@ export function DonationDrawer({
     formData.append('file', file);
     formData.append('folder', 'donations');
     const progressInterval = setInterval(() => {
-      setUploadProgress(prev => Math.min(prev + 10, 90));
+      setUploadProgress((prev: number) => Math.min(prev + 10, 90));
     }, 200);
     try {
       const resp = await fetch('/api/upload', {
@@ -938,10 +941,12 @@ export function DonationDrawer({
                             QR Code Pembayaran
                           </h4>
                           <div className='flex justify-center mb-3'>
-                            <img
-                              src={getSelectedPaymentMethod()?.qrCode}
+                            <Image
+                              src={getSelectedPaymentMethod()?.qrCode || ''}
                               alt='QR Code Pembayaran'
-                              className='w-48 h-48 border rounded-lg'
+                              width={192}
+                              height={192}
+                              className='border rounded-lg'
                             />
                           </div>
                           <div className='space-y-2'>
@@ -979,8 +984,8 @@ export function DonationDrawer({
                   <div className='border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center'>
                     {proofUrl ? (
                       <div className='relative'>
-                        <img
-                          src={proofUrl}
+                        <ClickableImage
+                          src={getImageUrl(proofUrl)}
                           alt='Bukti Donasi'
                           className='w-full object-cover rounded-lg border'
                         />

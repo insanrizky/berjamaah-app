@@ -6,7 +6,7 @@ import { PullToRefresh } from '@/components/shared/pull-to-refresh';
 import { ProgramListCard } from './program-list-card';
 
 interface ProgramListProps {
-  status?: 'all' | 'draft' | 'pending' | 'active' | 'paused' | 'ended';
+  status?: 'all' | 'draft' | 'active' | 'inactive';
   category?: string;
   onProgramSelect?: (programId: string) => void;
   className?: string;

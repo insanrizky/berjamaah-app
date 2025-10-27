@@ -128,8 +128,9 @@ export default function SignInForm() {
               type='submit'
               className='w-full'
               disabled={form.formState.isSubmitting}
+              loading={form.formState.isSubmitting}
             >
-              {form.formState.isSubmitting ? 'Sedang masuk...' : 'Masuk'}
+              Masuk
             </Button>
 
             <div className='flex items-center justify-center'>

@@ -13,6 +13,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle } from 'lucide-react';
 import { formatCurrencyCompact } from '@/lib/currency-utils';
+import { getImageUrl } from '@/utils/image-url';
+import { ClickableImage } from '@/components/shared/image-preview';
 
 // Types for program data
 interface Program {
@@ -22,24 +24,11 @@ interface Program {
   targetAmount: string;
   category: string | null;
   status: string;
-  programType: string;
   contact?: string | null;
   details?: string | null;
   bannerImage?: string | null;
   createdAt: string;
   updatedAt: string;
-  programPeriods: Array<{
-    id: string;
-    startDate: string | null;
-    endDate: string | null;
-    currentAmount: string;
-    cycleNumber?: number | null;
-    recurringFrequency?: 'weekly' | 'monthly' | 'quarterly' | 'yearly' | null;
-    recurringDay?: number | null;
-    recurringDurationDays?: number | null;
-    totalCycles?: number | null;
-    nextActivationDate?: string | null;
-  }>;
   // _count removed - using totalDonationCount instead
   progressPercentage: number;
   totalRaisedAmount: number;
@@ -52,7 +41,7 @@ interface ProgramResponse {
 }
 
 interface ProgramListCardProps {
-  status?: 'all' | 'draft' | 'pending' | 'active' | 'paused' | 'ended';
+  status?: 'all' | 'draft' | 'active' | 'inactive';
   category?: string;
   onProgramSelect?: (programId: string) => void;
   className?: string;
@@ -102,14 +91,10 @@ export function ProgramListCard({
     switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'ended':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'paused':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'draft':
+      case 'inactive':
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-      case 'pending':
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+      case 'draft':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
@@ -119,14 +104,10 @@ export function ProgramListCard({
     switch (status) {
       case 'active':
         return 'Aktif';
-      case 'ended':
-        return 'Selesai';
-      case 'paused':
-        return 'Dijeda';
+      case 'inactive':
+        return 'Tidak Aktif';
       case 'draft':
         return 'Draft';
-      case 'pending':
-        return 'Menunggu';
       default:
         return 'Tidak Diketahui';
     }
@@ -144,9 +125,23 @@ export function ProgramListCard({
             {programs.map(program => (
               <Card
                 key={program.id}
-                className='py-0 gap-0 cursor-pointer hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700'
+                className='py-0 gap-0 cursor-pointer hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700 overflow-hidden'
                 onClick={() => onProgramSelect?.(program.id)}
               >
+                {/* Header Image */}
+                {program.bannerImage && (
+                  <div className='w-full aspect-square overflow-hidden'>
+                    <ClickableImage
+                      src={getImageUrl(program.bannerImage)}
+                      alt={`Banner ${program.title}`}
+                      className='w-full h-full object-cover'
+                      onError={e => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+
                 <CardContent className='px-4 pt-4'>
                   <div className='flex items-start justify-between gap-3'>
                     <div className='flex-1 min-w-0'>

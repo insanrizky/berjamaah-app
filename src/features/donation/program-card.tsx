@@ -1,6 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
+import { getImageUrl } from '@/utils/image-url';
+import { ClickableImage } from '@/components/shared/image-preview';
+
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +11,6 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Target, Calendar, HandCoins, Users, Clock } from 'lucide-react';
 import { DonationDrawer } from './donation-drawer';
-import { formatPeriodTextForCard } from '@/lib/period-utils';
 import { formatDateForDisplay } from '@/lib/date';
 
 interface Program {
@@ -55,9 +57,9 @@ export function ProgramCard({ program, onDonationSubmit }: ProgramCardProps) {
     switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'completed':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'paused':
+      case 'inactive':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+      case 'draft':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
@@ -80,21 +82,18 @@ export function ProgramCard({ program, onDonationSubmit }: ProgramCardProps) {
   };
 
   // Use the utility function to get period text
-  const periodText = formatPeriodTextForCard(
-    program.startDate,
-    program.endDate
-  );
+  const periodText = 'Selalu Aktif';
 
   return (
     <>
       <Card className='border border-gray-200 dark:border-gray-700 shadow-sm py-0 overflow-hidden'>
         {/* Banner Image */}
         {program.bannerImage && (
-          <div className='w-full h-32 sm:h-40 overflow-hidden'>
-            <img
-              src={program.bannerImage}
+          <div className='w-full aspect-square overflow-hidden'>
+            <ClickableImage
+              src={getImageUrl(program.bannerImage)}
               alt={`Banner ${program.title}`}
-              className='w-full object-cover'
+              className='w-full h-full object-cover'
               onError={e => {
                 // Hide image if it fails to load
                 e.currentTarget.style.display = 'none';
@@ -117,10 +116,8 @@ export function ProgramCard({ program, onDonationSubmit }: ProgramCardProps) {
                   >
                     {{
                       active: 'Aktif',
-                      completed: 'Selesai',
                       inactive: 'Tidak Aktif',
-                      pending: 'Menunggu',
-                      cancelled: 'Dibatalkan',
+                      draft: 'Draft',
                     }[program.status] || program.status}
                   </Badge>
                 </div>
@@ -151,13 +148,7 @@ export function ProgramCard({ program, onDonationSubmit }: ProgramCardProps) {
               <div className='flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400'>
                 <Calendar className='w-4 h-4' />
                 <span>
-                  {program.startDate &&
-                  !formatPeriodTextForCard(
-                    program.startDate,
-                    program.endDate
-                  ).includes('Selalu Aktif')
-                    ? `Selesai ${new Date(program.endDate).toLocaleDateString('id-ID')}`
-                    : formatDateForDisplay(new Date(program?.createdAt ?? ''))}
+                  {formatDateForDisplay(new Date(program?.createdAt ?? ''))}
                 </span>
               </div>
               <div className='flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400'>

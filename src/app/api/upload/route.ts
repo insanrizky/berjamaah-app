@@ -52,12 +52,12 @@ export async function POST(request: NextRequest) {
 
     await s3Client.send(command);
 
-    // Return the public URL
-    const publicUrl = `${process.env.CLOUDFLARE_R2_PUBLIC_URL}/${fileName}`;
+    // Return the API endpoint URL instead of public URL
+    const apiUrl = `/api/image/${encodeURIComponent(fileName)}`;
 
     return NextResponse.json({
       success: true,
-      url: publicUrl,
+      url: apiUrl,
       fileName: fileName,
     });
   } catch (error) {

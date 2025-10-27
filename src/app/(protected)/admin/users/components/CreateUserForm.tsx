@@ -176,8 +176,8 @@ export function CreateUserForm({
               >
                 Cancel
               </Button>
-              <Button type='submit' disabled={isSubmitting} className='flex-1'>
-                {isSubmitting ? 'Creating...' : 'Create User'}
+              <Button type='submit' disabled={isSubmitting} loading={isSubmitting} className='flex-1'>
+                Create User
               </Button>
             </div>
           </form>

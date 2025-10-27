@@ -30,8 +30,6 @@ model User {
   uniqueId          String?           @unique
   dob               DateTime?
   verifiedDonations Donation[]        @relation("VerifiedByAdmin")
-  approvedPrograms  Program[]         @relation("ApprovedPrograms")
-  rejectedPrograms  Program[]         @relation("RejectedPrograms")
   createdPrograms   Program[]         @relation("CreatedPrograms")
   bankAccounts      UserBankAccount[]
 
@@ -56,7 +54,6 @@ model Donation {
   donorEmail              String           @map("donor_email")
   donorPhone              String?          @map("donor_phone")
   programId               String           @map("program_id")
-  programPeriodId         String?          @map("program_period_id")
   verifiedByAdminId       String?          @map("verified_by_admin_id")
   userBankAccountId       String?          @map("user_bank_account_id")
   amount                  Decimal          @db.Decimal(15, 2)
@@ -68,7 +65,6 @@ model Donation {
   createdAt               DateTime         @default(now()) @map("created_at")
   updatedAt               DateTime         @updatedAt @map("updated_at")
   program                 Program          @relation(fields: [programId], references: [id])
-  programPeriod           ProgramPeriod?   @relation(fields: [programPeriodId], references: [id])
   verifiedByAdmin         User?            @relation("VerifiedByAdmin", fields: [verifiedByAdminId], references: [id])
   userBankAccount         UserBankAccount? @relation(fields: [userBankAccountId], references: [id])
 
@@ -83,45 +79,17 @@ model Program {
   bannerImage     String?         @map("banner_image")
   category        String?
   status          String          @default("draft")
-  programType     String          @default("one_time") @map("program_type")
   contact         String?
   details         String?
   createdBy       String          @map("created_by")
   createdAt       DateTime        @default(now()) @map("created_at")
   updatedAt       DateTime        @updatedAt @map("updated_at")
-  approvedAt      DateTime?       @map("approved_at")
-  approvedBy      String?         @map("approved_by")
-  rejectedAt      DateTime?       @map("rejected_at")
-  rejectedBy      String?         @map("rejected_by")
-  rejectionReason String?         @map("rejection_reason")
   donations       Donation[]
-  programPeriods  ProgramPeriod[]
   createdByUser   User?           @relation("CreatedPrograms", fields: [createdBy], references: [id])
-  approvedByUser  User?           @relation("ApprovedPrograms", fields: [approvedBy], references: [id])
-  rejectedByUser  User?           @relation("RejectedPrograms", fields: [rejectedBy], references: [id])
 
   @@map("programs")
 }
 
-model ProgramPeriod {
-  id                    String     @id @default(cuid())
-  programId             String     @map("program_id")
-  startDate             DateTime?  @map("start_date")
-  endDate               DateTime?  @map("end_date")
-  cycleNumber           Int?       @map("cycle_number")
-  currentAmount         Decimal    @default(0) @map("current_amount") @db.Decimal(15, 2)
-  recurringFrequency    String?    @map("recurring_frequency")
-  recurringDay          Int?       @map("recurring_day")
-  recurringDurationDays Int?       @map("recurring_duration_days")
-  totalCycles           Int?       @map("total_cycles")
-  nextActivationDate    DateTime?  @map("next_activation_date")
-  createdAt             DateTime   @default(now()) @map("created_at")
-  updatedAt             DateTime   @updatedAt @map("updated_at")
-  donations             Donation[]
-  program               Program    @relation(fields: [programId], references: [id], onDelete: Cascade)
-
-  @@map("program_periods")
-}
 
 model UserBankAccount {
   id            String     @id @default(cuid())
