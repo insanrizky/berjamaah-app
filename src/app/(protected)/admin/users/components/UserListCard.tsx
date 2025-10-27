@@ -302,14 +302,20 @@ export function UserListCard({
                               {user.role === 'user' ? (
                                 <DropdownMenuItem
                                   disabled={user.status !== 'active'}
-                                  onClick={() => openAdminDialog(user)}
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    openAdminDialog(user);
+                                  }}
                                 >
                                   <UserPlus className='w-4 h-4 mr-2' />
                                   Jadikan Admin
                                 </DropdownMenuItem>
                               ) : (
                                 <DropdownMenuItem
-                                  onClick={() => openUserDialog(user)}
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    openUserDialog(user);
+                                  }}
                                 >
                                   <UserPlus className='w-4 h-4 mr-2' />
                                   Jadikan User
@@ -318,7 +324,10 @@ export function UserListCard({
                               {(user.status === 'pending' ||
                                 user.status === 'scheduled') && (
                                 <DropdownMenuItem
-                                  onClick={() => openResendDialog(user)}
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    openResendDialog(user);
+                                  }}
                                 >
                                   <Send className='w-4 h-4 mr-2' />
                                   Kirim Ulang Email Aktivasi
