@@ -12,13 +12,16 @@ const s3Client = new S3Client({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { filename: string } }
+  { params }: { params: Promise<{ filename: string }> }
 ) {
   try {
-    const { filename } = params;
-    
+    const { filename } = await params;
+
     if (!filename) {
-      return NextResponse.json({ error: 'Filename is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Filename is required' },
+        { status: 400 }
+      );
     }
 
     // Decode the filename in case it contains special characters
@@ -39,13 +42,13 @@ export async function GET(
     // Convert the stream to a buffer
     const chunks: Uint8Array[] = [];
     const reader = response.Body.transformToWebStream().getReader();
-    
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
       chunks.push(value);
     }
-    
+
     const buffer = Buffer.concat(chunks);
 
     // Determine content type
@@ -60,17 +63,19 @@ export async function GET(
         'Content-Length': buffer.length.toString(),
       },
     });
-
   } catch (error) {
     console.error('Image fetch error:', error);
-    
+
     // Handle specific AWS errors
     if (error && typeof error === 'object' && 'name' in error) {
       if (error.name === 'NoSuchKey') {
         return NextResponse.json({ error: 'Image not found' }, { status: 404 });
       }
     }
-    
-    return NextResponse.json({ error: 'Failed to fetch image' }, { status: 500 });
+
+    return NextResponse.json(
+      { error: 'Failed to fetch image' },
+      { status: 500 }
+    );
   }
 }

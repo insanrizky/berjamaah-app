@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/drawer';
 import { getImageUrl } from '@/utils/image-url';
 import { ClickableImage } from '@/components/shared/image-preview';
+import { trpc } from '@/utils/trpc';
+import { formatCurrency } from '@/lib/currency-utils';
 import {
   CheckCircle,
   Clock,

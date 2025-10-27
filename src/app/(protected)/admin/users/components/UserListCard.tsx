@@ -44,7 +44,6 @@ import {
   MoreHorizontal,
   UserPlus,
   Send,
-  Loader2,
   Mail,
   Phone,
   Calendar,
@@ -443,9 +442,8 @@ export function UserListCard({
                 selectedUser && handleResendActivation(selectedUser)
               }
               disabled={isResendingActivation}
-              loading={isResendingActivation}
             >
-              Kirim Email Aktivasi
+              {isResendingActivation ? 'Mengirim...' : 'Kirim Email Aktivasi'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
