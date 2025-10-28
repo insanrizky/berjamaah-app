@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,6 +34,7 @@ import {
 import { toast } from 'sonner';
 import { trpcClient } from '@/utils/trpc';
 import { cn } from '@/lib/utils';
+import { signOut } from '@/lib/auth-client';
 
 const schema = z
   .object({
@@ -55,7 +56,6 @@ type FormValues = z.infer<typeof schema>;
 
 function CompleteRegistrationForm() {
   const params = useSearchParams();
-  const router = useRouter();
   const token = params.get('token') ?? '';
 
   const form = useForm<FormValues>({
@@ -74,7 +74,8 @@ function CompleteRegistrationForm() {
     try {
       await trpcClient.user.completeRegistration.mutate({ token, ...values });
       toast.success('Registrasi berhasil, silakan masuk');
-      router.push('/signin');
+      // Ensure any active session is cleared before redirecting to sign in
+      await signOut({ callbackUrl: '/signin', redirect: true });
     } catch (error: unknown) {
       const errorMessage =
         (error as Error)?.message || 'Gagal menyelesaikan registrasi';

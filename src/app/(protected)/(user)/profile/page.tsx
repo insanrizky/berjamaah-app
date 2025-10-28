@@ -40,10 +40,7 @@ export default function ProfilePage() {
     );
   }
 
-  // Mock user data - replace with actual API call
-  const userStats = {
-    memberSince: '2024-01-15',
-  };
+  const memberSince = data?.createdAt ? new Date(data.createdAt) : null;
 
   const handleSignOut = async () => {
     try {
@@ -103,7 +100,7 @@ export default function ProfilePage() {
                 Bergabung Sejak
               </p>
               <p className='text-sm text-gray-600 dark:text-gray-400'>
-                {new Date(userStats.memberSince).toLocaleDateString('id-ID')}
+                {memberSince ? memberSince.toLocaleString('id-ID') : '-'}
               </p>
             </div>
           </div>

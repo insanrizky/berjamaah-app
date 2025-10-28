@@ -95,6 +95,7 @@ export const userRouter = router({
         fullName: true,
         phone: true,
         role: true,
+        createdAt: true,
       },
     });
 
