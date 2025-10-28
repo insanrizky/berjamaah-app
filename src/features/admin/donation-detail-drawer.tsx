@@ -100,7 +100,7 @@ export function AdminDonationDetailDrawer({
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'pending_verification':
+      case 'pending':
         return (
           <Badge
             variant='outline'
@@ -114,20 +114,10 @@ export function AdminDonationDetailDrawer({
         return (
           <Badge
             variant='outline'
-            className='bg-blue-50 text-blue-700 border-blue-200'
-          >
-            <CheckCircle className='w-3 h-3 mr-1' />
-            Terverifikasi
-          </Badge>
-        );
-      case 'confirmed':
-        return (
-          <Badge
-            variant='outline'
             className='bg-green-50 text-green-700 border-green-200'
           >
             <CheckCircle className='w-3 h-3 mr-1' />
-            Terkonfirmasi
+            Terverifikasi
           </Badge>
         );
       case 'rejected':
@@ -451,7 +441,7 @@ export function AdminDonationDetailDrawer({
             )}
 
             {/* Admin Actions */}
-            {(donation.status === 'pending_verification' ||
+            {(donation.status === 'pending' ||
               donation.status === 'verified') && (
               <Card className='gap-0'>
                 <CardHeader className='pb-3'>
@@ -462,7 +452,7 @@ export function AdminDonationDetailDrawer({
                 </CardHeader>
                 <CardContent>
                   {/* Status Actions */}
-                  {donation.status === 'pending_verification' && (
+                  {donation.status === 'pending' && (
                     <div className='space-y-2'>
                       <p className='text-sm text-gray-600 dark:text-gray-400 mb-3'>
                         Verifikasi Donasi

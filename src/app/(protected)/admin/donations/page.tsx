@@ -32,8 +32,8 @@ function DonationsPageContent(): React.JSX.Element | null {
   const { data: session, status } = useSession();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<
-    'pending_verification' | 'verified' | 'confirmed' | 'rejected' | 'all'
-  >('pending_verification');
+    'pending' | 'verified' | 'rejected' | 'all'
+  >('pending');
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [programFilter, setProgramFilter] = useState<string>('all');
   const [programOptions, setProgramOptions] = useState<
@@ -86,14 +86,7 @@ function DonationsPageContent(): React.JSX.Element | null {
   };
 
   const handleStatusChange = (value: string) => {
-    setStatusFilter(
-      value as
-        | 'pending_verification'
-        | 'verified'
-        | 'confirmed'
-        | 'rejected'
-        | 'all'
-    );
+    setStatusFilter(value as 'pending' | 'verified' | 'rejected' | 'all');
   };
 
   const handleApplyFilters = () => {
@@ -103,7 +96,7 @@ function DonationsPageContent(): React.JSX.Element | null {
 
   const handleResetFilters = () => {
     // Reset status filter to default (search is handled separately)
-    setStatusFilter('pending_verification');
+    setStatusFilter('pending');
     setProgramFilter('all');
     // Close the filter drawer
     setIsFilterDrawerOpen(false);
@@ -147,11 +140,11 @@ function DonationsPageContent(): React.JSX.Element | null {
                 <Button variant='outline' className='flex items-center gap-2'>
                   <Filter className='w-4 h-4' />
                   Filter
-                  {(statusFilter !== 'pending_verification' ||
+                  {(statusFilter !== 'pending' ||
                     programFilter !== 'all') && (
                     <span className='bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center'>
                       {(
-                        Number(statusFilter !== 'pending_verification') +
+                        Number(statusFilter !== 'pending') +
                         Number(programFilter !== 'all')
                       ).toString()}
                     </span>
@@ -181,14 +174,11 @@ function DonationsPageContent(): React.JSX.Element | null {
                             <SelectValue placeholder='Pilih status' />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value='pending_verification'>
+                            <SelectItem value='pending'>
                               Menunggu Verifikasi
                             </SelectItem>
                             <SelectItem value='verified'>
                               Terverifikasi
-                            </SelectItem>
-                            <SelectItem value='confirmed'>
-                              Terkonfirmasi
                             </SelectItem>
                             <SelectItem value='rejected'>Ditolak</SelectItem>
                             <SelectItem value='all'>Semua Status</SelectItem>

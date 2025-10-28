@@ -2,18 +2,19 @@ import { TRPCError } from '@trpc/server';
 import z from 'zod';
 import prisma from '../../prisma/index';
 import { protectedProcedure, publicProcedure, router } from '../lib/trpc';
+import { generateDonationReferenceNumber } from '../utils/donation-reference';
 
 export const donationRouter = router({
   getUserDonations: protectedProcedure
     .input(
       z.object({
         limit: z.number().int().positive().optional().default(10),
-        cursor: z.string().optional(),
+        offset: z.number().int().min(0).optional().default(0),
       })
     )
     .query(async ({ ctx, input }) => {
       try {
-        const { limit, cursor } = input;
+        const { limit, offset } = input;
 
         const donations = await prisma.donation.findMany({
           where: {
@@ -27,30 +28,36 @@ export const donationRouter = router({
                 description: true,
                 category: true,
                 bannerImage: true,
+                targetAmount: true,
+              },
+            },
+            verifiedByAdmin: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
               },
             },
           },
           orderBy: {
             createdAt: 'desc',
           },
-          take: limit + 1,
-          ...(cursor && {
-            cursor: {
-              id: cursor,
-            },
-            skip: 1,
-          }),
+          take: limit,
+          skip: offset,
         });
 
-        let nextCursor: string | undefined = undefined;
-        if (donations.length > limit) {
-          const nextItem = donations.pop();
-          nextCursor = nextItem!.id;
-        }
+        const totalCount = await prisma.donation.count({
+          where: {
+            userId: ctx.session.user.id,
+          },
+        });
 
         return {
           donations,
-          nextCursor,
+          pagination: {
+            totalCount,
+            hasMore: offset + donations.length < totalCount,
+          },
         };
       } catch {
         throw new TRPCError({
@@ -62,7 +69,7 @@ export const donationRouter = router({
 
   getDonationById: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .query(async ({ input, ctx }) => {
+    .query(async ({ ctx, input }) => {
       try {
         const donation = await prisma.donation.findFirst({
           where: {
@@ -80,7 +87,6 @@ export const donationRouter = router({
                 targetAmount: true,
               },
             },
-            // single image now stored on donation
             verifiedByAdmin: {
               select: {
                 id: true,
@@ -106,26 +112,141 @@ export const donationRouter = router({
           });
         }
 
-        // Calculate total raised amount for the program
-        const donationTotals = await prisma.donation.aggregate({
-          where: {
-            programId: donation.programId,
-            status: 'verified',
+        return donation;
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch donation',
+        });
+      }
+    }),
+
+  getPrograms: publicProcedure
+    .input(
+      z.object({
+        status: z.enum(['active', 'completed', 'draft']).optional(),
+        limit: z.number().int().positive().optional().default(10),
+        offset: z.number().int().min(0).optional().default(0),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const { status, limit, offset } = input;
+
+        const where: Record<string, unknown> = {};
+        if (status) {
+          where.status = status;
+        }
+
+        const programs = await prisma.program.findMany({
+          where,
+          include: {
+            donations: {
+              where: {
+                status: { in: ['verified'] },
+              },
+              select: {
+                amount: true,
+                userId: true,
+                createdAt: true,
+              },
+            },
           },
-          _sum: { amount: true },
-          _count: true,
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: limit,
+          skip: offset,
         });
 
-        const totalRaisedAmount = Number(donationTotals._sum.amount || 0);
-        const progressPercentage =
-          donation.program && Number(donation.program.targetAmount) > 0
-            ? (totalRaisedAmount / Number(donation.program.targetAmount)) * 100
-            : 0;
+        return programs.map(program => {
+          const totalDonations = program.donations.reduce(
+            (sum, donation) => sum + Number(donation.amount),
+            0
+          );
+          const uniqueDonors = new Set(
+            program.donations.map(donation => donation.userId)
+          ).size;
+
+          return {
+            id: program.id,
+            title: program.title,
+            description: program.description,
+            category: program.category,
+            bannerImage: program.bannerImage,
+            targetAmount: program.targetAmount,
+            collectedAmount: totalDonations,
+            progress:
+              Number(program.targetAmount) > 0
+                ? (totalDonations / Number(program.targetAmount)) * 100
+                : 0,
+            donorCount: uniqueDonors,
+            status: program.status,
+          };
+        });
+      } catch {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch programs',
+        });
+      }
+    }),
+
+  getProgramById: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input }) => {
+      try {
+        const program = await prisma.program.findFirst({
+          where: {
+            id: input.id,
+            status: 'active',
+          },
+          include: {
+            donations: {
+              where: {
+                status: { in: ['verified'] },
+              },
+              select: {
+                amount: true,
+                userId: true,
+                createdAt: true,
+              },
+            },
+          },
+        });
+
+        if (!program) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Program not found or not active',
+          });
+        }
+
+        const totalDonations = program.donations.reduce(
+          (sum, donation) => sum + Number(donation.amount),
+          0
+        );
+        const uniqueDonors = new Set(
+          program.donations.map(donation => donation.userId)
+        ).size;
 
         return {
-          ...donation,
-          totalRaisedAmount,
-          progressPercentage,
+          id: program.id,
+          title: program.title,
+          description: program.description,
+          category: program.category,
+          bannerImage: program.bannerImage,
+          targetAmount: program.targetAmount,
+          collectedAmount: totalDonations,
+          progress:
+            Number(program.targetAmount) > 0
+              ? (totalDonations / Number(program.targetAmount)) * 100
+              : 0,
+          donorCount: uniqueDonors,
+          status: program.status,
         };
       } catch (error) {
         if (error instanceof TRPCError) {
@@ -133,103 +254,60 @@ export const donationRouter = router({
         }
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to fetch donation details',
+          message: 'Failed to fetch program',
         });
       }
     }),
 
-  // Get available programs for donation
-  getPrograms: publicProcedure
+  getProgramDonations: publicProcedure
     .input(
       z.object({
-        status: z
-          .enum(['active', 'paused', 'ended'])
-          .optional()
-          .default('active'),
-        category: z.string().optional(),
+        programId: z.string(),
         limit: z.number().int().positive().optional().default(10),
         offset: z.number().int().min(0).optional().default(0),
       })
     )
     .query(async ({ input }) => {
       try {
-        const programs = await prisma.program.findMany({
+        const { programId, limit, offset } = input;
+
+        const donations = await prisma.donation.findMany({
           where: {
-            status: input.status,
-            ...(input.category && { category: input.category }),
+            programId,
+            status: { in: ['verified'] }, // Only show verified donations
           },
           select: {
             id: true,
-            title: true,
-            description: true,
-            targetAmount: true,
-            bannerImage: true,
-            category: true,
-            status: true,
-            contact: true,
+            donorName: true,
+            amount: true,
             createdAt: true,
-            // Optimized: Only get verified donations with minimal fields
-            donations: {
-              where: {
-                status: 'verified',
-              },
-              select: {
-                amount: true,
-              },
-            },
+            donationReferenceNumber: true,
           },
-          orderBy: { createdAt: 'desc' },
-          take: input.limit,
-          skip: input.offset,
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: limit,
+          skip: offset,
         });
 
-        // Transform data to match frontend expectations
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const transformedPrograms = programs.map((program: any) => {
-          const activePeriod = program.programPeriods[0];
-          const totalDonations = program.donations.reduce(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (sum: number, donation: any) => sum + Number(donation.amount),
-            0
-          );
-          const uniqueDonors = new Set(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            program.donations.map((d: any) => d.userId)
-          ).size;
-          const progress =
-            Number(program.targetAmount) > 0
-              ? Math.round(
-                  (totalDonations / Number(program.targetAmount)) * 100
-                )
-              : 0;
-
-          return {
-            id: program.id,
-            title: program.title,
-            description: program.description,
-            target: Number(program.targetAmount),
-            collected: totalDonations,
-            progress: Math.min(progress, 100),
-            period: activePeriod
-              ? `${activePeriod.startDate.toLocaleDateString('id-ID')} - ${activePeriod.endDate.toLocaleDateString('id-ID')}`
-              : 'N/A',
-            category: program.category || 'Umum',
-            donorCount: uniqueDonors,
-            startDate: activePeriod?.startDate.toISOString() || null,
-            endDate:
-              activePeriod?.endDate.toISOString() ||
-              program.createdAt.toISOString(),
-            status: program.status,
-            bannerImage: program.bannerImage,
-          };
+        const totalCount = await prisma.donation.count({
+          where: {
+            programId,
+            status: { in: ['verified'] },
+          },
         });
 
-        return transformedPrograms;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (error) {
+        return {
+          donations,
+          pagination: {
+            totalCount,
+            hasMore: offset + donations.length < totalCount,
+          },
+        };
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to fetch programs',
+          message: 'Failed to fetch program donations',
         });
       }
     }),
@@ -239,18 +317,18 @@ export const donationRouter = router({
     .input(
       z.object({
         programId: z.string(),
-        amount: z.number().positive('Amount must be positive'),
-        donorName: z.string().min(1, 'Donor name is required'),
-        donorEmail: z.string().email('Valid email is required'),
+        amount: z.number().positive(),
+        donorName: z.string(),
+        donorEmail: z.string().email(),
         donorPhone: z.string().optional(),
-        paymentMethod: z.enum(['bank_transfer', 'digital_wallet', 'qris']),
+        paymentMethod: z.string(),
         userBankAccountId: z.string().optional(),
         senderBankName: z.string().optional(),
         senderAccountNumber: z.string().optional(),
         senderAccountHolder: z.string().optional(),
-        saveBankAccount: z.boolean().optional().default(false),
-        transferDate: z.coerce.date().optional(),
-        donationProofImage: z.string().url('Valid image URL is required'),
+        saveBankAccount: z.boolean().optional(),
+        transferDate: z.string().optional(),
+        donationProofImage: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -280,7 +358,7 @@ export const donationRouter = router({
           input.senderAccountNumber &&
           input.senderAccountHolder
         ) {
-          // Check if account already exists
+          // Check if account already exists (including soft-deleted ones)
           const existingAccount = await prisma.userBankAccount.findFirst({
             where: {
               userId: ctx.session.user.id,
@@ -289,6 +367,18 @@ export const donationRouter = router({
           });
 
           if (existingAccount) {
+            // If it's soft-deleted, restore it
+            if (existingAccount.deletedAt) {
+              await prisma.userBankAccount.update({
+                where: { id: existingAccount.id },
+                data: {
+                  bankName: input.senderBankName,
+                  accountHolder: input.senderAccountHolder,
+                  deletedAt: null, // Restore by removing deletedAt
+                  updatedAt: new Date(),
+                },
+              });
+            }
             bankAccountId = existingAccount.id;
           } else if (input.saveBankAccount) {
             // Create new bank account record only if user wants to save it
@@ -306,22 +396,22 @@ export const donationRouter = router({
         }
 
         // Generate unique donation reference number
-        const donationReferenceNumber = `DON-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+        const donationReferenceNumber = generateDonationReferenceNumber();
 
         // Create donation
         const donation = await prisma.donation.create({
           data: {
             userId: ctx.session.user.id,
-            donorName: input.donorName,
-            donorEmail: input.donorEmail,
-            donorPhone: input.donorPhone,
             programId: input.programId,
             amount: input.amount,
             paymentMethod: input.paymentMethod,
             userBankAccountId: bankAccountId,
             donationReferenceNumber,
-            status: 'pending_verification',
+            status: 'pending',
             donationProofImage: input.donationProofImage,
+            donorName: input.donorName,
+            donorEmail: input.donorEmail,
+            donorPhone: input.donorPhone,
             ...(input.transferDate && { verifiedAt: input.transferDate }),
           },
           include: {
@@ -335,6 +425,13 @@ export const donationRouter = router({
                 targetAmount: true,
               },
             },
+            verifiedByAdmin: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+              },
+            },
             userBankAccount: {
               select: {
                 id: true,
@@ -346,68 +443,10 @@ export const donationRouter = router({
           },
         });
 
-        return donation;
-      } catch (error) {
-        console.log('error', error);
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to create donation',
-        });
-      }
-    }),
-
-  // Removed uploadDonationProof in favor of passing image URL during creation
-
-  // Get donation statistics for a program
-  getProgramDonationStats: publicProcedure
-    .input(z.object({ programId: z.string() }))
-    .query(async ({ input }) => {
-      try {
-        const program = await prisma.program.findFirst({
-          where: { id: input.programId },
-          include: {
-            donations: {
-              where: {
-                status: { in: ['verified', 'confirmed'] },
-              },
-              select: {
-                amount: true,
-                userId: true,
-                createdAt: true,
-              },
-            },
-          },
-        });
-
-        if (!program) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Program not found',
-          });
-        }
-
-        const totalDonations = program.donations.reduce(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (sum: number, donation: any) => sum + Number(donation.amount),
-          0
-        );
-        const uniqueDonors = new Set(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          program.donations.map((d: any) => d.userId)
-        ).size;
-        const progress =
-          Number(program.targetAmount) > 0
-            ? Math.round((totalDonations / Number(program.targetAmount)) * 100)
-            : 0;
-
         return {
-          totalDonations,
-          uniqueDonors,
-          progress: Math.min(progress, 100),
-          targetAmount: Number(program.targetAmount),
+          success: true,
+          donation,
+          message: 'Donation created successfully',
         };
       } catch (error) {
         if (error instanceof TRPCError) {
@@ -415,12 +454,14 @@ export const donationRouter = router({
         }
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to fetch donation statistics',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Failed to create donation',
         });
       }
     }),
 
-  // Admin endpoints for donation management
   // Get pending donations for admin verification
   getPendingDonations: protectedProcedure
     .input(
@@ -428,9 +469,7 @@ export const donationRouter = router({
         limit: z.number().int().positive().optional().default(10),
         offset: z.number().int().min(0).optional().default(0),
         search: z.string().optional(),
-        status: z
-          .enum(['pending_verification', 'verified', 'confirmed', 'rejected'])
-          .optional(),
+        status: z.enum(['pending', 'verified', 'rejected']).optional(),
         programId: z.string().optional(),
       })
     )
@@ -448,7 +487,8 @@ export const donationRouter = router({
 
         // Build where clause
         const where: {
-          status?: string;
+          status?: 'pending' | 'verified' | 'rejected';
+          programId?: string;
           OR?: Array<{
             donorName?: { contains: string; mode: 'insensitive' };
             donorEmail?: { contains: string; mode: 'insensitive' };
@@ -458,15 +498,12 @@ export const donationRouter = router({
               accountHolder: { contains: string; mode: 'insensitive' };
             };
           }>;
-          programId?: string;
         } = {};
 
         if (status) {
           where.status = status;
-        } else {
-          // Default to pending verification if no status specified
-          where.status = 'pending_verification';
         }
+        // If no status specified, don't filter by status (show all)
 
         if (programId && programId !== 'all') {
           where.programId = programId;
@@ -491,50 +528,52 @@ export const donationRouter = router({
           ];
         }
 
-        const [donations, totalCount] = await Promise.all([
-          prisma.donation.findMany({
-            where,
-            include: {
-              program: {
-                select: {
-                  id: true,
-                  title: true,
-                  description: true,
-                  category: true,
-                  bannerImage: true,
-                },
-              },
-              verifiedByAdmin: {
-                select: {
-                  id: true,
-                  fullName: true,
-                  email: true,
-                },
-              },
-              userBankAccount: {
-                select: {
-                  id: true,
-                  bankName: true,
-                  accountNumber: true,
-                  accountHolder: true,
-                },
+        const donations = await prisma.donation.findMany({
+          where,
+          include: {
+            program: {
+              select: {
+                id: true,
+                title: true,
+                description: true,
+                category: true,
+                bannerImage: true,
               },
             },
-            orderBy: { createdAt: 'desc' },
-            take: limit,
-            skip: offset,
-          }),
-          prisma.donation.count({ where }),
-        ]);
+            verifiedByAdmin: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+              },
+            },
+            userBankAccount: {
+              select: {
+                id: true,
+                bankName: true,
+                accountNumber: true,
+                accountHolder: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: limit,
+          skip: offset,
+        });
+
+        const totalCount = await prisma.donation.count({ where });
 
         return {
           donations,
           pagination: {
             totalCount,
-            hasMore: offset + limit < totalCount,
+            hasMore: offset + donations.length < totalCount,
           },
         };
-      } catch {
+      } catch (error) {
+        console.error('Error in getPendingDonations:', error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to fetch pending donations',
@@ -583,22 +622,17 @@ export const donationRouter = router({
           });
         }
 
-        if (donation.status !== 'pending_verification') {
+        if (donation.status !== 'pending') {
           throw new TRPCError({
             code: 'BAD_REQUEST',
-            message: 'Donation is not in pending verification status',
+            message: 'Donation is not in pending status',
           });
         }
 
         // Update donation status
         const newStatus = action === 'verify' ? 'verified' : 'rejected';
-        const updateData: {
-          status: string;
-          verifiedByAdminId: string;
-          verifiedAt: Date;
-          updatedAt: Date;
-        } = {
-          status: newStatus,
+        const updateData = {
+          status: newStatus as 'pending' | 'verified' | 'rejected',
           verifiedByAdminId: ctx.session.user.id,
           verifiedAt: new Date(),
           updatedAt: new Date(),
@@ -629,6 +663,14 @@ export const donationRouter = router({
                 email: true,
               },
             },
+            userBankAccount: {
+              select: {
+                id: true,
+                bankName: true,
+                accountNumber: true,
+                accountHolder: true,
+              },
+            },
           },
         });
 
@@ -644,95 +686,6 @@ export const donationRouter = router({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to update donation status',
-        });
-      }
-    }),
-
-  // Confirm verified donation (admin only)
-  confirmDonation: protectedProcedure
-    .input(
-      z.object({
-        donationId: z.string(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      // Check if user is admin
-      if (ctx.session.user.role !== 'admin') {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Unauthorized access',
-        });
-      }
-
-      try {
-        const { donationId } = input;
-
-        // Find the donation
-        const donation = await prisma.donation.findUnique({
-          where: { id: donationId },
-          include: {
-            program: {
-              select: {
-                id: true,
-                title: true,
-              },
-            },
-          },
-        });
-
-        if (!donation) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Donation not found',
-          });
-        }
-
-        if (donation.status !== 'verified') {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: 'Donation must be verified before confirmation',
-          });
-        }
-
-        // Update donation status to confirmed
-        const updatedDonation = await prisma.donation.update({
-          where: { id: donationId },
-          data: {
-            status: 'confirmed',
-            updatedAt: new Date(),
-          },
-          include: {
-            program: {
-              select: {
-                id: true,
-                title: true,
-                description: true,
-                category: true,
-                bannerImage: true,
-              },
-            },
-            verifiedByAdmin: {
-              select: {
-                id: true,
-                fullName: true,
-                email: true,
-              },
-            },
-          },
-        });
-
-        return {
-          success: true,
-          donation: updatedDonation,
-          message: 'Donation confirmed successfully',
-        };
-      } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to confirm donation',
         });
       }
     }),

@@ -52,7 +52,9 @@ export const programRouter = router({
           ),
           async () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const where: Record<string, any> = {};
+            const where: Record<string, any> = {
+              deletedAt: null, // Only get non-deleted programs
+            };
 
             // Non-admin users can only see active programs
             if (!input.adminView && ctx?.session?.user?.role !== 'admin') {
@@ -158,8 +160,11 @@ export const programRouter = router({
     .query(async ({ input }) => {
       try {
         const [program, donationTotals] = await Promise.all([
-          prisma.program.findUnique({
-            where: { id: input.id },
+          prisma.program.findFirst({
+            where: { 
+              id: input.id,
+              deletedAt: null, // Only get non-deleted programs
+            },
             include: {
               createdByUser: {
                 select: {
@@ -248,9 +253,12 @@ export const programRouter = router({
     .input(updateProgramSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        // Check if user is the creator of the program
-        const existingProgram = await prisma.program.findUnique({
-          where: { id: input.id },
+        // Check if user is the creator of the program and it's not deleted
+        const existingProgram = await prisma.program.findFirst({
+          where: { 
+            id: input.id,
+            deletedAt: null, // Only allow updates to non-deleted programs
+          },
           select: { createdBy: true },
         });
 
@@ -297,9 +305,12 @@ export const programRouter = router({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
       try {
-        // Check if user is the creator of the program
-        const existingProgram = await prisma.program.findUnique({
-          where: { id: input.id },
+        // Check if user is the creator of the program and it's not already deleted
+        const existingProgram = await prisma.program.findFirst({
+          where: { 
+            id: input.id,
+            deletedAt: null, // Only allow deletion of non-deleted programs
+          },
           select: { createdBy: true },
         });
 
@@ -317,8 +328,13 @@ export const programRouter = router({
           });
         }
 
-        await prisma.program.delete({
+        // Soft delete by setting deletedAt timestamp
+        await prisma.program.update({
           where: { id: input.id },
+          data: {
+            deletedAt: new Date(),
+            updatedAt: new Date(),
+          },
         });
 
         return { success: true, message: 'Program deleted successfully' };
@@ -343,9 +359,12 @@ export const programRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       try {
-        // Check if user is the creator of the program
-        const existingProgram = await prisma.program.findUnique({
-          where: { id: input.id },
+        // Check if user is the creator of the program and it's not deleted
+        const existingProgram = await prisma.program.findFirst({
+          where: { 
+            id: input.id,
+            deletedAt: null, // Only allow status updates to non-deleted programs
+          },
           select: { createdBy: true, status: true },
         });
 

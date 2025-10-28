@@ -7,36 +7,36 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  // DropdownMenuCheckboxItem,
+  DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
 import { useSession, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePathname } from 'next/navigation';
-// import { useTheme } from 'next-themes';
+import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import {
   User,
   LogOut,
-  // Sun,
-  // Moon,
-  // Monitor,
+  Sun,
+  Moon,
+  Monitor,
   ChevronDown,
   Shield,
   Home,
 } from 'lucide-react';
-// import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function UserMenu() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
-  // const { theme, setTheme } = useTheme();
-  // const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   // Ensure component is mounted to avoid hydration mismatch
-  // useEffect(() => {
-  //   setMounted(true);
-  // }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (status === 'loading') {
     return <Skeleton className='h-9 w-9 rounded-full' />;
@@ -84,7 +84,7 @@ export default function UserMenu() {
           </div>
           <div className='flex flex-col'>
             <span className='font-medium'>
-              {session.user.fullName || 'User'}
+              {session.user.fullName || session.user.email || 'User'}
             </span>
             <span className='text-xs text-muted-foreground truncate max-w-[170px]'>
               {session.user.email}
@@ -94,7 +94,7 @@ export default function UserMenu() {
         <DropdownMenuSeparator />
 
         {/* Theme Toggle Section */}
-        {/* <DropdownMenuLabel className='text-xs font-medium text-muted-foreground px-2 py-1.5'>
+        <DropdownMenuLabel className='text-xs font-medium text-muted-foreground px-2 py-1.5'>
           Tema
         </DropdownMenuLabel>
         {mounted && (
@@ -124,9 +124,9 @@ export default function UserMenu() {
               Sistem
             </DropdownMenuCheckboxItem>
           </>
-        )} */}
+        )}
 
-        {/* <DropdownMenuSeparator /> */}
+        <DropdownMenuSeparator />
 
         {/* Admin Dashboard Link */}
         {session.user.role === 'admin' && (
@@ -137,7 +137,7 @@ export default function UserMenu() {
             >
               <Link href='/admin/home'>
                 <Shield className='w-4 h-4' />
-                Admin Dashboard
+                Admin Panel
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />

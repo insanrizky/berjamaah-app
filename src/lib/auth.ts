@@ -26,6 +26,8 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
   interface JWT {
     role: string;
+    fullName?: string | null;
+    email?: string | null;
   }
 }
 
@@ -50,6 +52,8 @@ export const authOptions: NextAuthOptions = {
           },
         });
 
+        console.log(user);
+
         if (!user) {
           return null;
         }
@@ -73,6 +77,8 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           fullName: user.fullName,
           role: user.role,
+          // Provide NextAuth's conventional name field for broader compatibility
+          name: user.fullName ?? undefined,
         };
       },
     }),
@@ -84,6 +90,17 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role;
+        // Persist additional fields into the JWT so they are available in the session callback
+        if ('fullName' in user) {
+          token.fullName =
+            (user as { fullName?: string | null }).fullName ??
+            token.fullName ??
+            null;
+        }
+        if ('email' in user) {
+          token.email =
+            (user as { email?: string | null }).email ?? token.email ?? null;
+        }
       }
       return token;
     },
@@ -91,7 +108,11 @@ export const authOptions: NextAuthOptions = {
       if (token && session.user) {
         session.user.id = token.sub!;
         session.user.role = token.role as string;
+        // Map custom fields from token back into the session
+        session.user.fullName = token.fullName ?? null;
+        session.user.email = token.email ?? session.user.email ?? null;
       }
+
       return session;
     },
   },

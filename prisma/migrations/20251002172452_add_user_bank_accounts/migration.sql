@@ -86,3 +86,10 @@ CREATE UNIQUE INDEX "user_bank_accounts_user_id_account_number_key" ON "public".
 
 -- AddForeignKey
 ALTER TABLE "public"."user_bank_accounts" ADD CONSTRAINT "user_bank_accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Configure RLS for user_bank_accounts (consistent with other tables)
+ALTER TABLE "public"."user_bank_accounts" DISABLE ROW LEVEL SECURITY;
+
+-- Grant privileges to Supabase roles
+GRANT ALL ON "public"."user_bank_accounts" TO authenticated;
+GRANT ALL ON "public"."user_bank_accounts" TO anon;

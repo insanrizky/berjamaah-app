@@ -33,34 +33,16 @@ export default function DonatePage() {
     null
   );
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    refetch,
-  } = trpc.donation.getUserDonations.useInfiniteQuery(
-    {
-      limit: 10,
-    },
-    {
-      getNextPageParam: lastPage => lastPage.nextCursor,
-    }
-  );
+  const { data, isLoading, refetch } = trpc.donation.getUserDonations.useQuery({
+    limit: 50,
+  });
 
   const donations =
-    data?.pages.flatMap(page =>
-      page.donations.map((donation: DonationFromAPI) => ({
-        ...donation,
-        amount: Number(donation.amount),
-        status: donation.status as
-          | 'pending_verification'
-          | 'verified'
-          | 'confirmed'
-          | 'rejected',
-      }))
-    ) ?? [];
+    data?.donations.map((donation: DonationFromAPI) => ({
+      ...donation,
+      amount: Number(donation.amount),
+      status: donation.status as 'pending' | 'verified' | 'rejected',
+    })) ?? [];
 
   const handleViewDetails = (donationId: string) => {
     setSelectedDonationId(donationId);
@@ -72,12 +54,6 @@ export default function DonatePage() {
 
   const handleRefresh = async () => {
     await refetch();
-  };
-
-  const handleLoadMore = async () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      await fetchNextPage();
-    }
   };
 
   if (status === 'loading') {
@@ -130,7 +106,7 @@ export default function DonatePage() {
               </CardContent>
             </Card>
           ) : (
-            <ListCard onLoadMore={hasNextPage ? handleLoadMore : undefined}>
+            <ListCard>
               <ListCardContent className='px-0'>
                 {donations.map(donation => (
                   <DonationHistoryCard
@@ -139,11 +115,6 @@ export default function DonatePage() {
                     onViewDetails={handleViewDetails}
                   />
                 ))}
-                {isFetchingNextPage && (
-                  <div className='flex justify-center py-4'>
-                    <Skeleton className='h-32 w-full' />
-                  </div>
-                )}
               </ListCardContent>
             </ListCard>
           )}

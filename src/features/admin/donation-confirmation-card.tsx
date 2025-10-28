@@ -68,7 +68,6 @@ export function DonationConfirmationCard({
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
-  const [isConfirming, setIsConfirming] = useState(false);
 
   const handleVerify = useCallback(async () => {
     try {
@@ -103,24 +102,6 @@ export function DonationConfirmationCard({
       toast.error('Gagal menolak donasi');
     } finally {
       setIsRejecting(false);
-    }
-  }, [donation.id, trpcClient, onStatusChange]);
-
-  const handleConfirm = useCallback(async () => {
-    try {
-      setIsConfirming(true);
-      await trpcClient.donation.confirmDonation.mutate({
-        donationId: donation.id,
-      });
-
-      toast.success('Donasi berhasil dikonfirmasi');
-      onStatusChange?.();
-      setIsDetailDrawerOpen(false);
-    } catch (error) {
-      console.error('Error confirming donation:', error);
-      toast.error('Gagal mengkonfirmasi donasi');
-    } finally {
-      setIsConfirming(false);
     }
   }, [donation.id, trpcClient, onStatusChange]);
 
@@ -168,30 +149,9 @@ export function DonationConfirmationCard({
     [trpcClient, onStatusChange]
   );
 
-  const handleConfirmFromDrawer = useCallback(
-    async (donationId: string) => {
-      try {
-        setIsConfirming(true);
-        await trpcClient.donation.confirmDonation.mutate({
-          donationId,
-        });
-
-        toast.success('Donasi berhasil dikonfirmasi');
-        onStatusChange?.();
-        setIsDetailDrawerOpen(false);
-      } catch (error) {
-        console.error('Error confirming donation:', error);
-        toast.error('Gagal mengkonfirmasi donasi');
-      } finally {
-        setIsConfirming(false);
-      }
-    },
-    [trpcClient, onStatusChange]
-  );
-
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'pending_verification':
+      case 'pending':
         return (
           <Badge
             variant='outline'
@@ -204,18 +164,9 @@ export function DonationConfirmationCard({
         return (
           <Badge
             variant='outline'
-            className='text-xs bg-blue-50 text-blue-700 border-blue-200'
-          >
-            Terverifikasi
-          </Badge>
-        );
-      case 'confirmed':
-        return (
-          <Badge
-            variant='outline'
             className='text-xs bg-green-50 text-green-700 border-green-200'
           >
-            Terkonfirmasi
+            Terverifikasi
           </Badge>
         );
       case 'rejected':
@@ -349,7 +300,7 @@ export function DonationConfirmationCard({
               className='flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700'
               onClick={e => e.stopPropagation()}
             >
-              {donation.status === 'pending_verification' && (
+              {donation.status === 'pending' && (
                 <>
                   <Button
                     size='sm'
@@ -376,16 +327,9 @@ export function DonationConfirmationCard({
               )}
 
               {donation.status === 'verified' && (
-                <Button
-                  size='sm'
-                  onClick={handleConfirm}
-                  disabled={isConfirming}
-                  loading={isConfirming}
-                  className='flex-1 text-xs h-8 bg-blue-500 hover:bg-blue-600'
-                >
-                  <CheckCircle className='w-3 h-3 mr-1' />
-                  Konfirmasi
-                </Button>
+                <div className='text-center text-sm text-gray-500 py-2'>
+                  Donasi telah terverifikasi
+                </div>
               )}
             </div>
 
@@ -409,10 +353,8 @@ export function DonationConfirmationCard({
         onCloseAction={() => setIsDetailDrawerOpen(false)}
         onVerify={handleVerifyFromDrawer}
         onReject={handleRejectFromDrawer}
-        onConfirm={handleConfirmFromDrawer}
         isVerifying={isVerifying}
         isRejecting={isRejecting}
-        isConfirming={isConfirming}
       />
     </>
   );

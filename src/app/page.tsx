@@ -91,26 +91,25 @@ export default function Beranda() {
 
   // Calculate user's total donations
   const userTotalDonations = donations.reduce((sum, donation) => {
-    if (donation.status === 'verified' || donation.status === 'confirmed') {
+    if (donation.status === 'verified') {
       return sum + Number(donation.amount);
     }
     return sum;
   }, 0);
 
   const userVerifiedDonations = donations.filter(
-    d => d.status === 'verified' || d.status === 'confirmed'
+    d => d.status === 'verified'
   ).length;
 
   const userPendingDonations = donations.filter(
-    d => d.status === 'pending_verification'
+    d => d.status === 'pending'
   ).length;
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'verified':
-      case 'confirmed':
         return <CheckCircle className='w-4 h-4 text-green-600' />;
-      case 'pending_verification':
+      case 'pending':
         return <Clock className='w-4 h-4 text-yellow-600' />;
       case 'rejected':
         return <XCircle className='w-4 h-4 text-red-600' />;
@@ -123,9 +122,7 @@ export default function Beranda() {
     switch (status) {
       case 'verified':
         return 'Terverifikasi';
-      case 'confirmed':
-        return 'Dikonfirmasi';
-      case 'pending_verification':
+      case 'pending':
         return 'Menunggu Verifikasi';
       case 'rejected':
         return 'Ditolak';
@@ -137,9 +134,8 @@ export default function Beranda() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'verified':
-      case 'confirmed':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'pending_verification':
+      case 'pending':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
       case 'rejected':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
@@ -180,7 +176,7 @@ export default function Beranda() {
                         <p className='text-xs font-medium text-green-700 dark:text-green-300 uppercase tracking-wide'>
                           Total Donasi
                         </p>
-                        <p className='text-2xl font-bold text-green-900 dark:text-green-100'>
+                        <p className='text-lg font-bold text-green-900 dark:text-green-100'>
                           {formatCurrencyCompact(userTotalDonations)}
                         </p>
                       </div>
@@ -199,7 +195,7 @@ export default function Beranda() {
                         <p className='text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wide'>
                           Program Diikuti
                         </p>
-                        <p className='text-2xl font-bold text-blue-900 dark:text-blue-100'>
+                        <p className='text-lg font-bold text-blue-900 dark:text-blue-100'>
                           {userVerifiedDonations}
                         </p>
                       </div>
@@ -220,7 +216,7 @@ export default function Beranda() {
                         <p className='text-xs font-medium text-yellow-700 dark:text-yellow-300 uppercase tracking-wide'>
                           Menunggu Verifikasi
                         </p>
-                        <p className='text-2xl font-bold text-yellow-900 dark:text-yellow-100'>
+                        <p className='text-lg font-bold text-yellow-900 dark:text-yellow-100'>
                           {userPendingDonations}
                         </p>
                       </div>
@@ -247,7 +243,7 @@ export default function Beranda() {
                         <p className='text-xs font-medium text-emerald-700 dark:text-emerald-300 uppercase tracking-wide'>
                           Program Aktif
                         </p>
-                        <p className='text-2xl font-bold text-emerald-900 dark:text-emerald-100'>
+                        <p className='text-lg font-bold text-emerald-900 dark:text-emerald-100'>
                           {stats.totalActivePrograms}
                         </p>
                       </div>
@@ -266,7 +262,7 @@ export default function Beranda() {
                         <p className='text-xs font-medium text-purple-700 dark:text-purple-300 uppercase tracking-wide'>
                           Total Donatur
                         </p>
-                        <p className='text-2xl font-bold text-purple-900 dark:text-purple-100'>
+                        <p className='text-lg font-bold text-purple-900 dark:text-purple-100'>
                           {stats.totalDonators}
                         </p>
                       </div>
@@ -306,7 +302,7 @@ export default function Beranda() {
                     Donasi Terbaru
                   </h2>
                   <Button variant='ghost' size='sm' asChild>
-                    <Link href='/profile'>
+                    <Link href='/donations'>
                       Lihat Semua
                       <ArrowRight className='w-4 h-4 ml-1' />
                     </Link>
@@ -357,11 +353,15 @@ export default function Beranda() {
                 </div>
                 <div className='space-y-2'>
                   <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>
-                    Bergabung dengan Komunitas
+                    Berlomba-lomba dalam Kebaikan
                   </h3>
                   <p className='text-gray-600 dark:text-gray-400'>
-                    Mari bersama-sama menciptakan dampak positif untuk
-                    masyarakat
+                    &quot;Dan berlomba-lombalah kamu kepada (mendapatkan)
+                    ampunan dari Tuhanmu dan surga yang luasnya seluas langit
+                    dan bumi.&quot;
+                  </p>
+                  <p className='text-gray-600 dark:text-gray-400'>
+                    (QS. Al-Hadid: 21)
                   </p>
                 </div>
                 <Button asChild className='w-full'>

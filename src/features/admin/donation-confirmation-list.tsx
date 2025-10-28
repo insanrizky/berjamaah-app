@@ -41,25 +41,23 @@ interface DonationData {
     fullName?: string | null;
     email: string;
   } | null;
-}
-
-interface DonationResponse {
-  donations: DonationData[];
-  pagination: {
-    totalCount: number;
-    hasMore: boolean;
-  };
+  userBankAccount?: {
+    id: string;
+    bankName: string;
+    accountNumber: string;
+    accountHolder: string;
+  } | null;
 }
 
 interface DonationConfirmationListProps {
-  status?: 'pending_verification' | 'verified' | 'confirmed' | 'rejected';
+  status?: 'pending' | 'verified' | 'rejected' | 'all';
   search?: string;
   programId?: string; // 'all' or specific program id
   className?: string;
 }
 
 export function DonationConfirmationList({
-  status = 'pending_verification',
+  status = 'all',
   search,
   programId,
   className,
@@ -70,12 +68,15 @@ export function DonationConfirmationList({
   const limit = 10;
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useInfiniteQuery<DonationResponse>({
+    useInfiniteQuery<{
+      donations: DonationData[];
+      pagination: { totalCount: number; hasMore: boolean };
+    }>({
       queryKey: ['admin-donations', status, search, programId ?? 'all', limit],
       initialPageParam: 0,
       queryFn: async ({ pageParam }) => {
         return trpcClient.donation.getPendingDonations.query({
-          status,
+          status: status === 'all' ? undefined : status,
           search,
           programId,
           limit,
@@ -118,14 +119,14 @@ export function DonationConfirmationList({
 
   const getStatusTitle = (status: string) => {
     switch (status) {
-      case 'pending_verification':
+      case 'pending':
         return 'Donasi Menunggu Verifikasi';
       case 'verified':
         return 'Donasi Terverifikasi';
-      case 'confirmed':
-        return 'Donasi Terkonfirmasi';
       case 'rejected':
         return 'Donasi Ditolak';
+      case 'all':
+        return 'Semua Donasi';
       default:
         return 'Donasi';
     }
@@ -176,9 +177,11 @@ export function DonationConfirmationList({
                 <div className='text-center py-8'>
                   <AlertCircle className='w-12 h-12 text-gray-400 mx-auto mb-4' />
                   <p className='text-sm text-gray-500'>
-                    {status === 'pending_verification'
+                    {status === 'pending'
                       ? 'Belum ada donasi yang menunggu verifikasi'
-                      : 'Belum ada donasi dengan status ini'}
+                      : status === 'all'
+                        ? 'Belum ada donasi'
+                        : 'Belum ada donasi dengan status ini'}
                   </p>
                 </div>
               )}

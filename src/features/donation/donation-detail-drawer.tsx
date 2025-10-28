@@ -38,7 +38,7 @@ export interface DonationDetail {
   donorEmail: string;
   donorPhone: string | null;
   amount: number;
-  status: 'pending_verification' | 'verified' | 'confirmed' | 'rejected';
+  status: 'pending' | 'verified' | 'rejected';
   donationReferenceNumber: string;
   bankAccountSender: string | null;
   bankAccountReceiver: string | null;
@@ -97,9 +97,8 @@ export function DonationDetailDrawer({
         ...donationData,
         amount: Number(donationData.amount),
         status: donationData.status as
-          | 'pending_verification'
+          | 'pending'
           | 'verified'
-          | 'confirmed'
           | 'rejected',
         transferDate: donationData.verifiedAt || null,
         transferReference: null,
@@ -127,9 +126,8 @@ export function DonationDetailDrawer({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'verified':
-      case 'confirmed':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'pending_verification':
+      case 'pending':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
       case 'rejected':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
@@ -141,9 +139,8 @@ export function DonationDetailDrawer({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'verified':
-      case 'confirmed':
         return <CheckCircle className='w-5 h-5' />;
-      case 'pending_verification':
+      case 'pending':
         return <Clock className='w-5 h-5' />;
       case 'rejected':
         return <XCircle className='w-5 h-5' />;
@@ -156,9 +153,7 @@ export function DonationDetailDrawer({
     switch (status) {
       case 'verified':
         return 'Terverifikasi';
-      case 'confirmed':
-        return 'Dikonfirmasi';
-      case 'pending_verification':
+      case 'pending':
         return 'Menunggu Verifikasi';
       case 'rejected':
         return 'Ditolak';
@@ -404,16 +399,12 @@ export function DonationDetailDrawer({
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className='grid grid-cols-1 gap-3'>
-                      <div className='space-y-2'>
-                        <div className='relative'>
-                          <ClickableImage
-                            src={getImageUrl(donation.donationProofImage)}
-                            alt='Bukti Transfer'
-                            className='w-full h-40 object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity'
-                          />
-                        </div>
-                      </div>
+                    <div className='w-full aspect-square overflow-hidden rounded-lg'>
+                      <ClickableImage
+                        src={getImageUrl(donation.donationProofImage)}
+                        alt='Bukti Transfer'
+                        className='w-full h-full object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity'
+                      />
                     </div>
                   </CardContent>
                 </Card>

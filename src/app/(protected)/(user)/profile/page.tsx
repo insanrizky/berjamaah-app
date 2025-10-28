@@ -13,11 +13,17 @@ import {
   Shield,
   MessageCircle,
   Phone,
+  CreditCard,
+  Settings,
 } from 'lucide-react';
 import { trpc } from '@/utils/trpc';
+import { useState } from 'react';
+import BankAccountDrawer from '@/components/bank-account/BankAccountDrawer';
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
+  const [isBankAccountDrawerOpen, setIsBankAccountDrawerOpen] = useState(false);
+  const { data, isLoading } = trpc.user.getProfile.useQuery();
 
   if (status === 'loading') {
     return (
@@ -46,7 +52,6 @@ export default function ProfilePage() {
       console.error('Error signing out:', error);
     }
   };
-  const { data, isLoading } = trpc.user.getProfile.useQuery();
 
   return (
     <div className='space-y-6 px-4'>
@@ -105,6 +110,33 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
+      {/* Bank Account Management */}
+      <Card className='border border-gray-200 dark:border-gray-700 shadow-sm'>
+        <CardHeader>
+          <CardTitle className='text-base flex items-center gap-2'>
+            <CreditCard className='w-5 h-5 text-blue-600' />
+            Rekening Bank
+          </CardTitle>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          <div className='bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg'>
+            <p className='text-sm text-gray-700 dark:text-gray-300 mb-3'>
+              Kelola rekening bank Anda untuk memudahkan proses donasi. Anda
+              dapat menyimpan beberapa rekening dan mengatur salah satunya
+              sebagai rekening utama.
+            </p>
+            <Button
+              onClick={() => setIsBankAccountDrawerOpen(true)}
+              className='w-full'
+              variant='outline'
+            >
+              <Settings className='w-4 h-4 mr-2' />
+              Kelola Rekening Bank
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Pusat Bantuan */}
       <Card className='border border-gray-200 dark:border-gray-700 shadow-sm'>
         <CardHeader>
@@ -145,6 +177,12 @@ export default function ProfilePage() {
           Keluar
         </Button>
       </div>
+
+      {/* Bank Account Drawer */}
+      <BankAccountDrawer
+        isOpen={isBankAccountDrawerOpen}
+        onClose={() => setIsBankAccountDrawerOpen(false)}
+      />
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { formatCurrency } from '@/lib/currency-utils';
 export interface DonationHistoryItem {
   id: string;
   amount: number;
-  status: 'pending_verification' | 'verified' | 'confirmed' | 'rejected';
+  status: 'pending' | 'verified' | 'rejected';
   donationReferenceNumber: string;
   createdAt: string;
   program: {
@@ -36,9 +36,8 @@ export function DonationHistoryCard({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'verified':
-      case 'confirmed':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'pending_verification':
+      case 'pending':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
       case 'rejected':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
@@ -51,9 +50,7 @@ export function DonationHistoryCard({
     switch (status) {
       case 'verified':
         return 'Terverifikasi';
-      case 'confirmed':
-        return 'Dikonfirmasi';
-      case 'pending_verification':
+      case 'pending':
         return 'Menunggu Verifikasi';
       case 'rejected':
         return 'Ditolak';

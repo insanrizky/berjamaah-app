@@ -1,17 +1,16 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
-
-import { getImageUrl } from '@/utils/image-url';
-import { ClickableImage } from '@/components/shared/image-preview';
 
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Target, Calendar, HandCoins, Users, Clock } from 'lucide-react';
+import { Target, Users, Eye, Heart, TrendingUp } from 'lucide-react';
 import { DonationDrawer } from './donation-drawer';
-import { formatDateForDisplay } from '@/lib/date';
+import { UserProgramDetailDrawer } from './user-program-detail-drawer';
+import { formatCurrencyCompact } from '@/lib/currency-utils';
+import { getImageUrl } from '@/utils/image-url';
+import { ClickableImage } from '@/components/shared/image-preview';
 
 interface Program {
   id: string;
@@ -39,18 +38,27 @@ interface ProgramCardProps {
 }
 
 export function ProgramCard({ program, onDonationSubmit }: ProgramCardProps) {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDonationDrawerOpen, setIsDonationDrawerOpen] = useState(false);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
 
   const handleDonate = () => {
-    setIsDrawerOpen(true);
+    setIsDonationDrawerOpen(true);
+  };
+
+  const handleViewDetails = () => {
+    setIsDetailDrawerOpen(true);
   };
 
   const handleDonationSubmit = (programId: string, amount: string) => {
     onDonationSubmit(programId, amount);
   };
 
-  const handleCloseDrawer = () => {
-    setIsDrawerOpen(false);
+  const handleCloseDonationDrawer = () => {
+    setIsDonationDrawerOpen(false);
+  };
+
+  const handleCloseDetailDrawer = () => {
+    setIsDetailDrawerOpen(false);
   };
 
   const getStatusColor = (status: string) => {
@@ -81,12 +89,13 @@ export function ProgramCard({ program, onDonationSubmit }: ProgramCardProps) {
     }
   };
 
-  // Use the utility function to get period text
-  const periodText = 'Selalu Aktif';
+  const progress = program.progressPercentage || program.progress;
+  const raisedAmount = program.totalRaisedAmount || program.collected;
+  const donorCount = program.totalDonationCount || program.donorCount;
 
   return (
     <>
-      <Card className='border border-gray-200 dark:border-gray-700 shadow-sm py-0 overflow-hidden'>
+      <Card className='border-0 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden'>
         {/* Banner Image */}
         {program.bannerImage && (
           <div className='w-full aspect-square overflow-hidden'>
@@ -95,7 +104,6 @@ export function ProgramCard({ program, onDonationSubmit }: ProgramCardProps) {
               alt={`Banner ${program.title}`}
               className='w-full h-full object-cover'
               onError={e => {
-                // Hide image if it fails to load
                 e.currentTarget.style.display = 'none';
               }}
             />
@@ -103,14 +111,20 @@ export function ProgramCard({ program, onDonationSubmit }: ProgramCardProps) {
         )}
 
         <CardContent className='p-4'>
-          <div className='space-y-4'>
-            {/* Program Header */}
-            <div className='flex items-start justify-between mb-2'>
-              <div className='flex-1'>
-                <div className='flex items-center gap-2 mb-2'>
-                  <h3 className='font-semibold text-gray-900 dark:text-white text-base'>
-                    {program.title}
-                  </h3>
+          <div className='space-y-3'>
+            {/* Header with Title and Status */}
+            <div className='flex items-start justify-between'>
+              <div className='flex-1 min-w-0'>
+                <h3 className='font-semibold text-gray-900 dark:text-white text-base leading-tight line-clamp-2'>
+                  {program.title}
+                </h3>
+                <div className='flex items-center gap-2 mt-1'>
+                  <Badge
+                    variant='outline'
+                    className={`text-xs ${getCategoryColor(program.category)}`}
+                  >
+                    {program.category}
+                  </Badge>
                   <Badge
                     className={`text-xs ${getStatusColor(program.status)}`}
                   >
@@ -121,76 +135,104 @@ export function ProgramCard({ program, onDonationSubmit }: ProgramCardProps) {
                     }[program.status] || program.status}
                   </Badge>
                 </div>
-                <Badge
-                  variant='outline'
-                  className={`text-xs ${getCategoryColor(program.category)}`}
-                >
-                  {program.category}
-                </Badge>
               </div>
             </div>
 
-            {/* Program Description */}
-            <p className='text-sm text-gray-600 dark:text-gray-400'>
-              {program.description}
-            </p>
+            {/* Description */}
+            <div className='space-y-1'>
+              <p className='text-sm text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed'>
+                {program.description}
+              </p>
+              {program.description.length > 100 && (
+                <p className='text-xs text-gray-500 dark:text-gray-500 italic'>
+                  Klik &quot;Detail&quot; untuk melihat deskripsi lengkap
+                </p>
+              )}
+            </div>
 
-            {/* Program Stats */}
-            <div className='grid grid-cols-2 gap-2'>
-              <div className='flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400'>
-                <Target className='w-4 h-4' />
-                <span>Target Rp {program.target.toLocaleString('id-ID')}</span>
+            {/* Key Stats */}
+            <div className='grid grid-cols-3 gap-3 text-center'>
+              <div className='space-y-1'>
+                <div className='flex items-center justify-center'>
+                  <Target className='w-4 h-4 text-green-600 dark:text-green-400' />
+                </div>
+                <p className='text-xs text-gray-600 dark:text-gray-400'>
+                  Target
+                </p>
+                <p className='text-sm font-semibold text-gray-900 dark:text-white'>
+                  {formatCurrencyCompact(program.target)}
+                </p>
               </div>
-              <div className='flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400'>
-                <Users className='w-4 h-4' />
-                <span>{program.totalDonationCount} donatur</span>
+              <div className='space-y-1'>
+                <div className='flex items-center justify-center'>
+                  <TrendingUp className='w-4 h-4 text-blue-600 dark:text-blue-400' />
+                </div>
+                <p className='text-xs text-gray-600 dark:text-gray-400'>
+                  Terkumpul
+                </p>
+                <p className='text-sm font-semibold text-gray-900 dark:text-white'>
+                  {formatCurrencyCompact(raisedAmount)}
+                </p>
               </div>
-              <div className='flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400'>
-                <Calendar className='w-4 h-4' />
-                <span>
-                  {formatDateForDisplay(new Date(program?.createdAt ?? ''))}
-                </span>
-              </div>
-              <div className='flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400'>
-                <Clock className='w-4 h-4' />
-                <span>{periodText}</span>
+              <div className='space-y-1'>
+                <div className='flex items-center justify-center'>
+                  <Users className='w-4 h-4 text-purple-600 dark:text-purple-400' />
+                </div>
+                <p className='text-xs text-gray-600 dark:text-gray-400'>
+                  Donatur
+                </p>
+                <p className='text-sm font-semibold text-gray-900 dark:text-white'>
+                  {donorCount}
+                </p>
               </div>
             </div>
 
             {/* Progress Bar */}
             <div className='space-y-2'>
-              <Progress
-                value={program.progressPercentage || program.progress}
-                className='h-2'
-              />
-              <div className='flex justify-between text-sm'>
-                <span className='text-gray-600 dark:text-gray-400'>
-                  Terkumpul Rp{' '}
-                  {(
-                    program.totalRaisedAmount || program.collected
-                  ).toLocaleString('id-ID')}
+              <div className='flex justify-between items-center'>
+                <span className='text-sm text-gray-600 dark:text-gray-400'>
+                  Progress
                 </span>
-                <span className='font-medium text-gray-900 dark:text-white'>
-                  {program.progressPercentage?.toFixed(2)}%
+                <span className='text-sm font-semibold text-gray-900 dark:text-white'>
+                  {progress.toFixed(1)}%
                 </span>
               </div>
+              <Progress value={progress} className='h-2' />
             </div>
 
-            {/* Donate Button */}
-            <Button onClick={handleDonate} className='w-full'>
-              <HandCoins className='w-4 h-4 mr-2' />
-              Donasi
-            </Button>
+            {/* Action Buttons */}
+            <div className='flex gap-2'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleViewDetails}
+                className='flex-1'
+              >
+                <Eye className='w-4 h-4 mr-1' />
+                Detail
+              </Button>
+              <Button onClick={handleDonate} size='sm' className='flex-1'>
+                <Heart className='w-4 h-4 mr-1' />
+                Donasi
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Donation Drawer for this specific program */}
+      {/* Donation Drawer */}
       <DonationDrawer
         program={program}
-        isOpen={isDrawerOpen}
-        onClose={handleCloseDrawer}
+        isOpen={isDonationDrawerOpen}
+        onClose={handleCloseDonationDrawer}
         onSubmit={handleDonationSubmit}
+      />
+
+      {/* Program Detail Drawer */}
+      <UserProgramDetailDrawer
+        program={program}
+        isOpen={isDetailDrawerOpen}
+        onClose={handleCloseDetailDrawer}
       />
     </>
   );

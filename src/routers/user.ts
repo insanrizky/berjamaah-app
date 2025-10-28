@@ -600,6 +600,7 @@ export const userRouter = router({
     const bankAccounts = await prisma.userBankAccount.findMany({
       where: {
         userId: ctx.session.user.id,
+        deletedAt: null, // Only get non-deleted accounts
       },
       orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
       select: {
@@ -628,7 +629,7 @@ export const userRouter = router({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      // Check if this account already exists
+      // Check if this account already exists (including soft-deleted ones)
       const existingAccount = await prisma.userBankAccount.findFirst({
         where: {
           userId,
@@ -637,31 +638,62 @@ export const userRouter = router({
       });
 
       if (existingAccount) {
-        // Update existing account
-        const updated = await prisma.userBankAccount.update({
-          where: { id: existingAccount.id },
-          data: {
-            bankName: input.bankName,
-            accountHolder: input.accountHolder,
-            isDefault: input.isDefault,
-            updatedAt: new Date(),
-          },
-        });
-
-        // If this is set as default, unset other defaults
-        if (input.isDefault) {
-          await prisma.userBankAccount.updateMany({
-            where: {
-              userId,
-              id: { not: updated.id },
-            },
+        // If it's soft-deleted, restore it and update
+        if (existingAccount.deletedAt) {
+          const restored = await prisma.userBankAccount.update({
+            where: { id: existingAccount.id },
             data: {
-              isDefault: false,
+              bankName: input.bankName,
+              accountHolder: input.accountHolder,
+              isDefault: input.isDefault,
+              deletedAt: null, // Restore by removing deletedAt
+              updatedAt: new Date(),
             },
           });
-        }
 
-        return updated;
+          // If this is set as default, unset other defaults
+          if (input.isDefault) {
+            await prisma.userBankAccount.updateMany({
+              where: {
+                userId,
+                id: { not: restored.id },
+                deletedAt: null, // Only update non-deleted accounts
+              },
+              data: {
+                isDefault: false,
+              },
+            });
+          }
+
+          return restored;
+        } else {
+          // Update existing non-deleted account
+          const updated = await prisma.userBankAccount.update({
+            where: { id: existingAccount.id },
+            data: {
+              bankName: input.bankName,
+              accountHolder: input.accountHolder,
+              isDefault: input.isDefault,
+              updatedAt: new Date(),
+            },
+          });
+
+          // If this is set as default, unset other defaults
+          if (input.isDefault) {
+            await prisma.userBankAccount.updateMany({
+              where: {
+                userId,
+                id: { not: updated.id },
+                deletedAt: null, // Only update non-deleted accounts
+              },
+              data: {
+                isDefault: false,
+              },
+            });
+          }
+
+          return updated;
+        }
       }
 
       // Create new account
@@ -681,6 +713,7 @@ export const userRouter = router({
           where: {
             userId,
             id: { not: newAccount.id },
+            deletedAt: null, // Only update non-deleted accounts
           },
           data: {
             isDefault: false,
@@ -691,15 +724,16 @@ export const userRouter = router({
       return newAccount;
     }),
 
-  // Delete bank account
+  // Delete bank account (soft delete)
   deleteBankAccount: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      // Verify the account belongs to the user
+      // Verify the account belongs to the user and is not already deleted
       const account = await prisma.userBankAccount.findFirst({
         where: {
           id: input.id,
           userId: ctx.session.user.id,
+          deletedAt: null, // Only allow deletion of non-deleted accounts
         },
       });
 
@@ -707,8 +741,13 @@ export const userRouter = router({
         throw new Error('Bank account not found');
       }
 
-      await prisma.userBankAccount.delete({
+      // Soft delete by setting deletedAt timestamp
+      await prisma.userBankAccount.update({
         where: { id: input.id },
+        data: {
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+        },
       });
 
       return {
