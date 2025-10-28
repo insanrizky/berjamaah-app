@@ -35,6 +35,7 @@ async function sendActivationEmail(email: string, activationUrl: string) {
   });
   if (error) {
     console.error('Resend error', error);
+    throw new Error('Resend error: ' + error.message);
   }
 }
 
@@ -63,10 +64,16 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const DAILY_LIMIT = 50;
+    const DAILY_LIMIT = Math.max(
+      0,
+      Number.parseInt(
+        process.env.SCHEDULED_ACTIVATION_DAILY_LIMIT || '50',
+        10
+      ) || 50
+    );
     const remaining = Math.max(0, DAILY_LIMIT - sentToday);
     if (remaining === 0) {
-      return NextResponse.json({ processed: 0, remaining: 0 });
+      return NextResponse.json({ processed: 0, remaining: 0, results: [] });
     }
 
     const scheduledUsers = await prisma.user.findMany({
@@ -78,42 +85,70 @@ export async function POST(req: NextRequest) {
       take: remaining,
     });
 
+    const results: Array<{
+      userId: string;
+      email: string | null;
+      status: 'sent' | 'skipped_no_email' | 'error';
+      error?: string;
+    }> = [];
+
     for (const u of scheduledUsers) {
-      if (!u.email) continue;
-      const token = generateToken(48);
-      const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 48);
+      if (!u.email) {
+        results.push({
+          userId: String(u.id),
+          email: null,
+          status: 'skipped_no_email',
+        });
+        continue;
+      }
 
-      await prisma.verification.upsert({
-        where: {
-          // composite not guaranteed; use id-less upsert pattern via identifier+value unique if exists
-          // fallback: create if not exists by unique on (identifier,value) not defined in schema
-          // this assumes Prisma model has a unique on value; if not, this may throw and can be adjusted in migration
-          value: token,
-        },
-        update: {},
-        create: {
-          identifier: u.email,
-          value: token,
-          expiresAt,
-        },
-      });
+      try {
+        const token = generateToken(48);
+        const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 48);
 
-      const activationUrl = `${baseUrl}/complete-registration?token=${encodeURIComponent(token)}`;
+        await prisma.verification.upsert({
+          where: {
+            // composite not guaranteed; use id-less upsert pattern via identifier+value unique if exists
+            // fallback: create if not exists by unique on (identifier,value) not defined in schema
+            // this assumes Prisma model has a unique on value; if not, this may throw and can be adjusted in migration
+            value: token,
+          },
+          update: {},
+          create: {
+            identifier: u.email,
+            value: token,
+            expiresAt,
+          },
+        });
 
-      await sendActivationEmail(u.email, activationUrl);
+        const activationUrl = `${baseUrl}/complete-registration?token=${encodeURIComponent(token)}`;
 
-      await prisma.user.update({
-        where: { id: u.id },
-        data: {
-          status: 'pending' as const,
-          updatedAt: new Date(),
-        },
-      });
+        await sendActivationEmail(u.email, activationUrl);
+
+        await prisma.user.update({
+          where: { id: u.id },
+          data: {
+            status: 'pending' as const,
+            updatedAt: new Date(),
+          },
+        });
+
+        results.push({ userId: String(u.id), email: u.email, status: 'sent' });
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        results.push({
+          userId: String(u.id),
+          email: u.email,
+          status: 'error',
+          error: message,
+        });
+      }
     }
 
     return NextResponse.json({
       processed: scheduledUsers.length,
       remaining: Math.max(0, DAILY_LIMIT - sentToday - scheduledUsers.length),
+      results,
     });
   } catch (error) {
     console.error('Webhook processing error', error);
