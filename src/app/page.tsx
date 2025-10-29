@@ -33,7 +33,7 @@ export default function Beranda() {
 
   // Get user donations
   const { data: userDonations } = trpc.donation.getUserDonations.useQuery(
-    { limit: 5 },
+    { limit: 5, status: 'verified' },
     { enabled: !!session }
   );
 
@@ -308,34 +308,53 @@ export default function Beranda() {
                     </Link>
                   </Button>
                 </div>
-                <div className='space-y-3'>
+                <div className='space-y-4'>
                   {donations.slice(0, 3).map(donation => (
                     <Card
                       key={donation.id}
-                      className='border-0 bg-gray-50 dark:bg-gray-800 shadow-sm'
+                      className='py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all duration-200 group'
                     >
-                      <CardContent className='p-4'>
-                        <div className='flex items-center justify-between'>
-                          <div className='flex-1'>
-                            <p className='font-medium text-gray-900 dark:text-white'>
-                              {donation.program.title}
-                            </p>
-                            <p className='text-sm text-gray-600 dark:text-gray-400'>
-                              {formatDateWIB(donation.createdAt)}
-                            </p>
+                      <CardContent className='p-3'>
+                        <div className='flex items-start gap-3'>
+                          {/* Icon and visual indicator */}
+                          <div className='flex-shrink-0 mt-0.5'>
+                            <div className='w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-200'>
+                              <Banknote className='w-4 h-4 text-green-600 dark:text-green-400' />
+                            </div>
                           </div>
-                          <div className='text-right space-y-1'>
-                            <p className='font-semibold text-green-600 dark:text-green-400'>
-                              {formatCurrency(Number(donation.amount))}
-                            </p>
-                            <Badge
-                              className={`text-xs ${getStatusColor(donation.status)}`}
-                            >
-                              <div className='flex items-center gap-1'>
-                                {getStatusIcon(donation.status)}
-                                {getStatusText(donation.status)}
+
+                          {/* Main content */}
+                          <div className='flex-1 min-w-0'>
+                            <div className='flex items-start justify-between gap-2'>
+                              <div className='flex-1 min-w-0'>
+                                <h4 className='font-semibold text-gray-900 dark:text-white text-sm leading-tight truncate'>
+                                  {donation.program.title}
+                                </h4>
+                                <div className='flex items-center gap-2 mt-1'>
+                                  <span className='text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1'>
+                                    <Activity className='w-3 h-3' />
+                                    {formatDateWIB(donation.createdAt)}
+                                  </span>
+                                </div>
                               </div>
-                            </Badge>
+
+                              {/* Amount and status */}
+                              <div className='text-right flex-shrink-0'>
+                                <p className='font-bold text-green-600 dark:text-green-400 text-sm'>
+                                  {formatCurrency(Number(donation.amount))}
+                                </p>
+                                <Badge
+                                  className={`text-xs px-2 py-0.5 mt-1 ${getStatusColor(donation.status)}`}
+                                >
+                                  <div className='flex items-center gap-1'>
+                                    {getStatusIcon(donation.status)}
+                                    <span>
+                                      {getStatusText(donation.status)}
+                                    </span>
+                                  </div>
+                                </Badge>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </CardContent>

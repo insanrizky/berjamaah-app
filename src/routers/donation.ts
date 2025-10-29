@@ -10,15 +10,17 @@ export const donationRouter = router({
       z.object({
         limit: z.number().int().positive().optional().default(10),
         offset: z.number().int().min(0).optional().default(0),
+        status: z.enum(['pending', 'verified', 'rejected']).optional(),
       })
     )
     .query(async ({ ctx, input }) => {
       try {
-        const { limit, offset } = input;
+        const { limit, offset, status } = input;
 
         const donations = await prisma.donation.findMany({
           where: {
             userId: ctx.session.user.id,
+            ...(status ? { status } : {}),
           },
           select: {
             id: true,
@@ -65,6 +67,7 @@ export const donationRouter = router({
         const totalCount = await prisma.donation.count({
           where: {
             userId: ctx.session.user.id,
+            ...(status ? { status } : {}),
           },
         });
 
