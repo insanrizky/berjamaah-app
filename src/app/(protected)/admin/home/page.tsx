@@ -110,6 +110,7 @@ export default function AdminDashboard() {
 
         try {
           const result = await trpcClient.donation.getPendingDonations.query({
+            status: 'pending',
             limit: 1, // We only need the count, not the actual data
           });
           return result;
@@ -129,6 +130,25 @@ export default function AdminDashboard() {
     totalDonators: 0,
     totalDonationAmount: 0,
   };
+
+  type PendingDonationsResponse = {
+    donations: unknown[];
+    pagination?: { totalCount: number };
+  };
+
+  const pendingDonationsCount = (() => {
+    const data = pendingDonationsData as PendingDonationsResponse | undefined;
+    if (!data) return 0;
+    if (Array.isArray(data.donations) && data.donations.length === 0) return 0;
+    if (
+      'pagination' in data &&
+      typeof data.pagination?.totalCount === 'number'
+    ) {
+      return data.pagination.totalCount;
+    }
+    if (Array.isArray(data.donations)) return data.donations.length;
+    return 0;
+  })();
 
   if (
     status === 'loading' ||
@@ -384,10 +404,7 @@ export default function AdminDashboard() {
                           Menunggu Verifikasi
                         </p>
                         <p className='text-2xl font-bold text-orange-900 dark:text-orange-100'>
-                          {pendingDonationsData &&
-                          'pagination' in pendingDonationsData
-                            ? pendingDonationsData.pagination.totalCount
-                            : 0}
+                          {pendingDonationsCount}
                         </p>
                       </div>
                       <div className='p-3 bg-orange-200 dark:bg-orange-800 rounded-xl'>
