@@ -177,15 +177,10 @@ export function DonationDrawer({
             .optional()
             .refine(
               val => {
-                console.log('Validating donationProofImage:', val); // Debug log
                 // Always pass validation for now - server uploads should be trusted
                 if (!val || val.trim() === '') {
-                  console.log('Empty value, validation passed'); // Debug log
                   return true;
                 }
-                console.log(
-                  'Non-empty value, validation passed (trusting server)'
-                ); // Debug log
                 return true; // Trust server uploads
               },
               {
@@ -383,22 +378,6 @@ export function DonationDrawer({
       // transferDate left optional
     };
 
-    console.log('Submitting donation with data:', donationData); // Debug log
-    console.log('proofUrl:', proofUrl); // Debug log
-    console.log('values.donationProofImage:', values.donationProofImage); // Debug log
-    console.log(
-      'donationProofImage value being sent:',
-      donationData.donationProofImage
-    ); // Debug log
-    console.log(
-      'donationProofImage type:',
-      typeof donationData.donationProofImage
-    ); // Debug log
-    console.log(
-      'donationProofImage length:',
-      donationData.donationProofImage?.length
-    ); // Debug log
-
     try {
       await createDonation.mutateAsync(donationData);
       onSubmit(program.id, values.amount);
@@ -456,27 +435,12 @@ export function DonationDrawer({
       setUploadProgress(100);
       if (resp.ok) {
         const data = await resp.json();
-        console.log('Upload successful, URL:', data.url); // Debug log
-        console.log('URL type:', typeof data.url); // Debug log
-        console.log('URL length:', data.url?.length); // Debug log
-        console.log(
-          'Is URL valid?',
-          (() => {
-            try {
-              new URL(data.url);
-              return true;
-            } catch {
-              return false;
-            }
-          })()
-        ); // Debug log
 
         setProofUrl(data.url);
         // Set the value and clear errors without triggering immediate validation
         setValue('donationProofImage', data.url, { shouldValidate: false });
         clearErrors('donationProofImage');
         // Don't trigger validation for uploaded images - they should be valid
-        console.log('Form value set, errors cleared'); // Debug log
       } else {
         console.error('Upload failed:', resp.status, resp.statusText);
       }

@@ -241,7 +241,7 @@ export const programRouter = router({
 
         return program;
       } catch (error) {
-        console.log('error adsf', error);
+        console.error('Error creating program:', error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to create program',

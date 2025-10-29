@@ -25,8 +25,6 @@ export default function DonationsPage() {
       status: 'verified',
     });
 
-  console.log({ donations });
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'verified':
