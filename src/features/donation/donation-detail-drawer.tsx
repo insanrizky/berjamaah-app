@@ -96,15 +96,15 @@ export function DonationDetailDrawer({
     ? {
         ...donationData,
         amount: Number(donationData.amount),
-        status: donationData.status as
-          | 'pending'
-          | 'verified'
-          | 'rejected',
+        status: donationData.status as 'pending' | 'verified' | 'rejected',
         transferDate: donationData.verifiedAt || null,
         transferReference: null,
-        bankAccountSender: donationData.userBankAccount
-          ? `${donationData.userBankAccount.bankName} - ${donationData.userBankAccount.accountNumber} (${donationData.userBankAccount.accountHolder})`
-          : null,
+        bankAccountSender:
+          donationData.bankName &&
+          donationData.accountNumber &&
+          donationData.accountHolder
+            ? `${donationData.bankName} - ${donationData.accountNumber} (${donationData.accountHolder})`
+            : null,
         bankAccountReceiver: null,
         adminNotes: null,
         verificationAttempts: 1,
@@ -280,6 +280,8 @@ export function DonationDetailDrawer({
                         {donation.donationReferenceNumber}
                       </p>
                     </div>
+                  </div>
+                  <div className='grid gap-3'>
                     <div>
                       <span className='text-sm text-gray-600 dark:text-gray-400'>
                         Tanggal Donasi:
@@ -288,16 +290,16 @@ export function DonationDetailDrawer({
                         {formatDate(donation.createdAt)}
                       </p>
                     </div>
-                    {donation.verifiedAt && (
-                      <div>
-                        <span className='text-sm text-gray-600 dark:text-gray-400'>
-                          Tanggal Verifikasi:
-                        </span>
-                        <p className='text-sm'>
-                          {formatDate(donation.verifiedAt)}
-                        </p>
-                      </div>
-                    )}
+                    <div>
+                      <span className='text-sm text-gray-600 dark:text-gray-400'>
+                        Tanggal Verifikasi:
+                      </span>
+                      <p className='text-sm'>
+                        {donation.verifiedAt
+                          ? formatDate(donation.verifiedAt)
+                          : '-'}
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

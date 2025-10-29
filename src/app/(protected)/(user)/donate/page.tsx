@@ -10,7 +10,6 @@ import {
   type DonationHistoryItem,
 } from '@/features/donation/donation-history-card';
 import { DonationDetailDrawer } from '@/features/donation/donation-detail-drawer';
-import { ListCard, ListCardContent } from '@/components/shared/list-card';
 import { PullToRefresh } from '@/components/shared/pull-to-refresh';
 
 type DonationFromAPI = {
@@ -106,17 +105,15 @@ export default function DonatePage() {
               </CardContent>
             </Card>
           ) : (
-            <ListCard>
-              <ListCardContent className='px-0'>
-                {donations.map(donation => (
-                  <DonationHistoryCard
-                    key={donation.id}
-                    donation={donation as DonationHistoryItem}
-                    onViewDetails={handleViewDetails}
-                  />
-                ))}
-              </ListCardContent>
-            </ListCard>
+            <div className='space-y-3'>
+              {donations.map(donation => (
+                <DonationHistoryCard
+                  key={donation.id}
+                  donation={donation as DonationHistoryItem}
+                  onViewDetails={handleViewDetails}
+                />
+              ))}
+            </div>
           )}
         </div>
 

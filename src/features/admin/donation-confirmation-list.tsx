@@ -41,12 +41,10 @@ interface DonationData {
     fullName?: string | null;
     email: string;
   } | null;
-  userBankAccount?: {
-    id: string;
-    bankName: string;
-    accountNumber: string;
-    accountHolder: string;
-  } | null;
+  // Bank account fields (denormalized)
+  bankName?: string | null;
+  accountNumber?: string | null;
+  accountHolder?: string | null;
 }
 
 interface DonationConfirmationListProps {

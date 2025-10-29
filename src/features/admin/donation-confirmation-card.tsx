@@ -50,12 +50,10 @@ interface DonationConfirmationCardProps {
       fullName?: string | null;
       email: string;
     } | null;
-    userBankAccount?: {
-      id: string;
-      bankName: string;
-      accountNumber: string;
-      accountHolder: string;
-    } | null;
+    // Bank account fields (denormalized)
+    bankName?: string | null;
+    accountNumber?: string | null;
+    accountHolder?: string | null;
   };
   onStatusChange?: () => void;
 }
@@ -283,15 +281,18 @@ export function DonationConfirmationCard({
             )}
 
             {/* Bank Account Info if available */}
-            {donation.userBankAccount && (
+            {(donation.bankName || donation.accountNumber || donation.accountHolder) && (
               <div className='text-sm bg-gray-50 dark:bg-gray-800 rounded-lg p-2'>
-                <p className='text-gray-900 dark:text-white font-medium'>
-                  {donation.userBankAccount.bankName} -{' '}
-                  {donation.userBankAccount.accountNumber}
-                </p>
-                <p className='text-xs text-gray-600 dark:text-gray-400'>
-                  a.n. {donation.userBankAccount.accountHolder}
-                </p>
+                {donation.bankName && donation.accountNumber && (
+                  <p className='text-gray-900 dark:text-white font-medium'>
+                    {donation.bankName} - {donation.accountNumber}
+                  </p>
+                )}
+                {donation.accountHolder && (
+                  <p className='text-xs text-gray-600 dark:text-gray-400'>
+                    a.n. {donation.accountHolder}
+                  </p>
+                )}
               </div>
             )}
 

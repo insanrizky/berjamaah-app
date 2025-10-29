@@ -63,12 +63,10 @@ export interface AdminDonationDetail {
     fullName?: string | null;
     email: string;
   } | null;
-  userBankAccount?: {
-    id: string;
-    bankName: string;
-    accountNumber: string;
-    accountHolder: string;
-  } | null;
+  // Bank account fields (denormalized)
+  bankName?: string | null;
+  accountNumber?: string | null;
+  accountHolder?: string | null;
 }
 
 interface AdminDonationDetailDrawerProps {
@@ -287,43 +285,49 @@ export function AdminDonationDetailDrawer({
                   )}
                 </div>
 
-                {donation.userBankAccount && (
+                {(donation.bankName || donation.accountNumber || donation.accountHolder) && (
                   <div className='pt-3 border-t border-gray-100'>
                     <p className='text-xs text-gray-500 mb-2 font-medium'>
                       Rekening Pengirim
                     </p>
                     <div className='space-y-2'>
-                      <div className='flex items-center gap-3'>
-                        <Building2 className='w-4 h-4 text-gray-500' />
-                        <div>
-                          <p className='text-sm font-medium text-gray-900'>
-                            {donation.userBankAccount.bankName}
-                          </p>
-                          <p className='text-xs text-gray-500'>Nama Bank</p>
+                      {donation.bankName && (
+                        <div className='flex items-center gap-3'>
+                          <Building2 className='w-4 h-4 text-gray-500' />
+                          <div>
+                            <p className='text-sm font-medium text-gray-900'>
+                              {donation.bankName}
+                            </p>
+                            <p className='text-xs text-gray-500'>Nama Bank</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className='flex items-center gap-3'>
-                        <CreditCard className='w-4 h-4 text-gray-500' />
-                        <div>
-                          <p className='text-sm font-medium text-gray-900'>
-                            {donation.userBankAccount.accountNumber}
-                          </p>
-                          <p className='text-xs text-gray-500'>
-                            Nomor Rekening
-                          </p>
+                      )}
+                      {donation.accountNumber && (
+                        <div className='flex items-center gap-3'>
+                          <CreditCard className='w-4 h-4 text-gray-500' />
+                          <div>
+                            <p className='text-sm font-medium text-gray-900'>
+                              {donation.accountNumber}
+                            </p>
+                            <p className='text-xs text-gray-500'>
+                              Nomor Rekening
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <div className='flex items-center gap-3'>
-                        <User className='w-4 h-4 text-gray-500' />
-                        <div>
-                          <p className='text-sm font-medium text-gray-900'>
-                            {donation.userBankAccount.accountHolder}
-                          </p>
-                          <p className='text-xs text-gray-500'>
-                            Nama Pemilik Rekening
-                          </p>
+                      )}
+                      {donation.accountHolder && (
+                        <div className='flex items-center gap-3'>
+                          <User className='w-4 h-4 text-gray-500' />
+                          <div>
+                            <p className='text-sm font-medium text-gray-900'>
+                              {donation.accountHolder}
+                            </p>
+                            <p className='text-xs text-gray-500'>
+                              Nama Pemilik Rekening
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 )}

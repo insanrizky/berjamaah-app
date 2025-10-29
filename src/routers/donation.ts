@@ -20,7 +20,23 @@ export const donationRouter = router({
           where: {
             userId: ctx.session.user.id,
           },
-          include: {
+          select: {
+            id: true,
+            donorName: true,
+            donorEmail: true,
+            donorPhone: true,
+            amount: true,
+            status: true,
+            paymentMethod: true,
+            verifiedAt: true,
+            donationReferenceNumber: true,
+            donationProofImage: true,
+            createdAt: true,
+            updatedAt: true,
+            // Bank account fields (denormalized)
+            bankName: true,
+            accountNumber: true,
+            accountHolder: true,
             program: {
               select: {
                 id: true,
@@ -76,7 +92,23 @@ export const donationRouter = router({
             id: input.id,
             userId: ctx.session.user.id,
           },
-          include: {
+          select: {
+            id: true,
+            donorName: true,
+            donorEmail: true,
+            donorPhone: true,
+            amount: true,
+            status: true,
+            paymentMethod: true,
+            verifiedAt: true,
+            donationReferenceNumber: true,
+            donationProofImage: true,
+            createdAt: true,
+            updatedAt: true,
+            // Bank account fields (denormalized)
+            bankName: true,
+            accountNumber: true,
+            accountHolder: true,
             program: {
               select: {
                 id: true,
@@ -92,14 +124,6 @@ export const donationRouter = router({
                 id: true,
                 fullName: true,
                 email: true,
-              },
-            },
-            userBankAccount: {
-              select: {
-                id: true,
-                bankName: true,
-                accountNumber: true,
-                accountHolder: true,
               },
             },
           },
@@ -322,7 +346,6 @@ export const donationRouter = router({
         donorEmail: z.string().email(),
         donorPhone: z.string().optional(),
         paymentMethod: z.string(),
-        userBankAccountId: z.string().optional(),
         senderBankName: z.string().optional(),
         senderAccountNumber: z.string().optional(),
         senderAccountHolder: z.string().optional(),
@@ -348,15 +371,16 @@ export const donationRouter = router({
           });
         }
 
-        let bankAccountId = input.userBankAccountId;
+        // Generate unique donation reference number
+        const donationReferenceNumber = generateDonationReferenceNumber();
 
-        // If no bank account ID provided but we have bank details, create/find the account
+        // Handle bank account saving if user wants to save it
         if (
-          !bankAccountId &&
           input.paymentMethod === 'bank_transfer' &&
           input.senderBankName &&
           input.senderAccountNumber &&
-          input.senderAccountHolder
+          input.senderAccountHolder &&
+          input.saveBankAccount
         ) {
           // Check if account already exists (including soft-deleted ones)
           const existingAccount = await prisma.userBankAccount.findFirst({
@@ -379,10 +403,9 @@ export const donationRouter = router({
                 },
               });
             }
-            bankAccountId = existingAccount.id;
-          } else if (input.saveBankAccount) {
-            // Create new bank account record only if user wants to save it
-            const newAccount = await prisma.userBankAccount.create({
+          } else {
+            // Create new bank account record
+            await prisma.userBankAccount.create({
               data: {
                 userId: ctx.session.user.id,
                 bankName: input.senderBankName,
@@ -391,12 +414,8 @@ export const donationRouter = router({
                 isDefault: false,
               },
             });
-            bankAccountId = newAccount.id;
           }
         }
-
-        // Generate unique donation reference number
-        const donationReferenceNumber = generateDonationReferenceNumber();
 
         // Create donation
         const donation = await prisma.donation.create({
@@ -405,7 +424,10 @@ export const donationRouter = router({
             programId: input.programId,
             amount: input.amount,
             paymentMethod: input.paymentMethod,
-            userBankAccountId: bankAccountId,
+            // Populate bank account fields directly
+            bankName: input.senderBankName,
+            accountNumber: input.senderAccountNumber,
+            accountHolder: input.senderAccountHolder,
             donationReferenceNumber,
             status: 'pending',
             donationProofImage: input.donationProofImage,
@@ -414,7 +436,23 @@ export const donationRouter = router({
             donorPhone: input.donorPhone,
             ...(input.transferDate && { verifiedAt: input.transferDate }),
           },
-          include: {
+          select: {
+            id: true,
+            donorName: true,
+            donorEmail: true,
+            donorPhone: true,
+            amount: true,
+            status: true,
+            paymentMethod: true,
+            verifiedAt: true,
+            donationReferenceNumber: true,
+            donationProofImage: true,
+            createdAt: true,
+            updatedAt: true,
+            // Bank account fields (denormalized)
+            bankName: true,
+            accountNumber: true,
+            accountHolder: true,
             program: {
               select: {
                 id: true,
@@ -430,14 +468,6 @@ export const donationRouter = router({
                 id: true,
                 fullName: true,
                 email: true,
-              },
-            },
-            userBankAccount: {
-              select: {
-                id: true,
-                bankName: true,
-                accountNumber: true,
-                accountHolder: true,
               },
             },
           },
@@ -494,9 +524,9 @@ export const donationRouter = router({
             donorEmail?: { contains: string; mode: 'insensitive' };
             donationReferenceNumber?: { contains: string; mode: 'insensitive' };
             program?: { title: { contains: string; mode: 'insensitive' } };
-            userBankAccount?: {
-              accountHolder: { contains: string; mode: 'insensitive' };
-            };
+            accountHolder?: { contains: string; mode: 'insensitive' };
+            bankName?: { contains: string; mode: 'insensitive' };
+            accountNumber?: { contains: string; mode: 'insensitive' };
           }>;
         } = {};
 
@@ -520,17 +550,31 @@ export const donationRouter = router({
               },
             },
             { program: { title: { contains: search, mode: 'insensitive' } } },
-            {
-              userBankAccount: {
-                accountHolder: { contains: search, mode: 'insensitive' },
-              },
-            },
+            { accountHolder: { contains: search, mode: 'insensitive' } },
+            { bankName: { contains: search, mode: 'insensitive' } },
+            { accountNumber: { contains: search, mode: 'insensitive' } },
           ];
         }
 
         const donations = await prisma.donation.findMany({
           where,
-          include: {
+          select: {
+            id: true,
+            donorName: true,
+            donorEmail: true,
+            donorPhone: true,
+            amount: true,
+            status: true,
+            paymentMethod: true,
+            verifiedAt: true,
+            donationReferenceNumber: true,
+            donationProofImage: true,
+            createdAt: true,
+            updatedAt: true,
+            // Bank account fields (denormalized)
+            bankName: true,
+            accountNumber: true,
+            accountHolder: true,
             program: {
               select: {
                 id: true,
@@ -545,14 +589,6 @@ export const donationRouter = router({
                 id: true,
                 fullName: true,
                 email: true,
-              },
-            },
-            userBankAccount: {
-              select: {
-                id: true,
-                bankName: true,
-                accountNumber: true,
-                accountHolder: true,
               },
             },
           },
@@ -646,7 +682,23 @@ export const donationRouter = router({
         const updatedDonation = await prisma.donation.update({
           where: { id: donationId },
           data: updateData,
-          include: {
+          select: {
+            id: true,
+            donorName: true,
+            donorEmail: true,
+            donorPhone: true,
+            amount: true,
+            status: true,
+            paymentMethod: true,
+            verifiedAt: true,
+            donationReferenceNumber: true,
+            donationProofImage: true,
+            createdAt: true,
+            updatedAt: true,
+            // Bank account fields (denormalized)
+            bankName: true,
+            accountNumber: true,
+            accountHolder: true,
             program: {
               select: {
                 id: true,
@@ -661,14 +713,6 @@ export const donationRouter = router({
                 id: true,
                 fullName: true,
                 email: true,
-              },
-            },
-            userBankAccount: {
-              select: {
-                id: true,
-                bankName: true,
-                accountNumber: true,
-                accountHolder: true,
               },
             },
           },

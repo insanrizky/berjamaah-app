@@ -15,6 +15,11 @@ import {
   Phone,
   CreditCard,
   Settings,
+  IdCard,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  XCircle,
 } from 'lucide-react';
 import { trpc } from '@/utils/trpc';
 import { useState } from 'react';
@@ -41,6 +46,43 @@ export default function ProfilePage() {
   }
 
   const memberSince = data?.createdAt ? new Date(data.createdAt) : null;
+  const dateOfBirth = data?.dob ? new Date(data.dob) : null;
+  const lastUpdated = data?.updatedAt ? new Date(data.updatedAt) : null;
+
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case 'active':
+        return {
+          label: 'Aktif',
+          icon: CheckCircle,
+          color: 'text-green-600',
+          bgColor: 'bg-green-100 dark:bg-green-900/20',
+        };
+      case 'pending':
+        return {
+          label: 'Menunggu Aktivasi',
+          icon: Clock,
+          color: 'text-yellow-600',
+          bgColor: 'bg-yellow-100 dark:bg-yellow-900/20',
+        };
+      case 'scheduled':
+        return {
+          label: 'Terjadwal',
+          icon: AlertCircle,
+          color: 'text-blue-600',
+          bgColor: 'bg-blue-100 dark:bg-blue-900/20',
+        };
+      default:
+        return {
+          label: 'Tidak Diketahui',
+          icon: XCircle,
+          color: 'text-gray-600',
+          bgColor: 'bg-gray-100 dark:bg-gray-900/20',
+        };
+    }
+  };
+
+  const statusInfo = data?.status ? getStatusInfo(data.status) : null;
 
   const handleSignOut = async () => {
     try {
@@ -61,17 +103,26 @@ export default function ProfilePage() {
             </div>
             <div className='flex-1'>
               <h2 className='text-lg font-semibold text-gray-900 dark:text-white'>
-                {isLoading ? 'Loading...' : data?.fullName}
+                {isLoading
+                  ? 'Loading...'
+                  : data?.fullName || 'Nama tidak tersedia'}
               </h2>
-
-              <Badge variant='outline' className='mt-1 text-xs'>
-                <Shield className='w-3 h-3 mr-1' />
-                {session?.user?.role || 'user'}
-              </Badge>
+              <div className='flex items-center gap-2 mt-1'>
+                <Badge variant='outline' className='text-xs'>
+                  <Shield className='w-3 h-3 mr-1' />
+                  {session?.user?.role || 'user'}
+                </Badge>
+                {statusInfo && (
+                  <Badge
+                    variant='outline'
+                    className={`text-xs ${statusInfo.bgColor} ${statusInfo.color} border-current`}
+                  >
+                    <statusInfo.icon className='w-3 h-3 mr-1' />
+                    {statusInfo.label}
+                  </Badge>
+                )}
+              </div>
             </div>
-            {/* <Button variant="outline" size="sm">
-                  <Edit3 className="w-4 h-4" />
-                </Button> */}
           </div>
         </CardContent>
       </Card>
@@ -93,6 +144,53 @@ export default function ProfilePage() {
               </p>
             </div>
           </div>
+
+          {data?.uniqueId && (
+            <div className='flex items-center gap-3'>
+              <IdCard className='w-5 h-5 text-gray-500 dark:text-gray-400' />
+              <div>
+                <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                  ID SIKAF
+                </p>
+                <p className='text-sm text-gray-600 dark:text-gray-400'>
+                  {data.uniqueId}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {data?.phone && (
+            <div className='flex items-center gap-3'>
+              <Phone className='w-5 h-5 text-gray-500 dark:text-gray-400' />
+              <div>
+                <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                  Nomor Telepon
+                </p>
+                <p className='text-sm text-gray-600 dark:text-gray-400'>
+                  {data.phone}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {dateOfBirth && (
+            <div className='flex items-center gap-3'>
+              <Calendar className='w-5 h-5 text-gray-500 dark:text-gray-400' />
+              <div>
+                <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                  Tanggal Lahir
+                </p>
+                <p className='text-sm text-gray-600 dark:text-gray-400'>
+                  {dateOfBirth.toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className='flex items-center gap-3'>
             <Calendar className='w-5 h-5 text-gray-500 dark:text-gray-400' />
             <div>
@@ -100,10 +198,38 @@ export default function ProfilePage() {
                 Bergabung Sejak
               </p>
               <p className='text-sm text-gray-600 dark:text-gray-400'>
-                {memberSince ? memberSince.toLocaleString('id-ID') : '-'}
+                {memberSince
+                  ? memberSince.toLocaleString('id-ID', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : '-'}
               </p>
             </div>
           </div>
+
+          {lastUpdated && (
+            <div className='flex items-center gap-3'>
+              <Clock className='w-5 h-5 text-gray-500 dark:text-gray-400' />
+              <div>
+                <p className='text-sm font-medium text-gray-900 dark:text-white'>
+                  Terakhir Diperbarui
+                </p>
+                <p className='text-sm text-gray-600 dark:text-gray-400'>
+                  {lastUpdated.toLocaleString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

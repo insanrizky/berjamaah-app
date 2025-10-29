@@ -95,7 +95,18 @@ export const userRouter = router({
         fullName: true,
         phone: true,
         role: true,
+        status: true,
+        uniqueId: true,
+        dob: true,
         createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            verifiedDonations: true,
+            createdPrograms: true,
+            bankAccounts: true,
+          },
+        },
       },
     });
 
