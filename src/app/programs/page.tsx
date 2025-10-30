@@ -8,6 +8,8 @@ import { useTRPCClient, queryClient } from '@/utils/trpc';
 import PullToRefresh from '@/components/shared/pull-to-refresh';
 import { ListCard, ListCardContent } from '@/components/shared/list-card';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { Card, CardContent } from '@/components/ui/card';
+import { History } from 'lucide-react';
 
 export default function Programs() {
   const { data: session, status } = useSession();
@@ -135,7 +137,16 @@ export default function Programs() {
         className={`${session && status === 'authenticated' ? 'pb-20' : ''}`}
       >
         <PullToRefresh onRefreshAction={handleRefresh}>
-          <div className='space-y-6'>
+          <div className='space-y-6 px-4'>
+            {/* Header */}
+            <div>
+              <h1 className='text-lg font-semibold text-gray-900 dark:text-white mb-2'>
+                Program Donasi
+              </h1>
+              <p className='text-sm text-gray-600 dark:text-gray-400'>
+                Jelajahi dan dukung program donasi.
+              </p>
+            </div>
             {/* Daftar Program Aktif Section */}
             <ListCard
               onLoadMore={() => {
@@ -144,7 +155,7 @@ export default function Programs() {
                 }
               }}
             >
-              <ListCardContent>
+              <ListCardContent className='px-0'>
                 <div className='space-y-4'>
                   {items.map(program => (
                     <ProgramCard
@@ -159,9 +170,18 @@ export default function Programs() {
                     </div>
                   )}
                   {!isLoading && items.length === 0 && (
-                    <div className='text-center text-sm text-gray-500 py-8'>
-                      Belum ada program aktif.
-                    </div>
+                    <Card className='border border-gray-200 dark:border-gray-700 py-0'>
+                      <CardContent className='p-8 text-center'>
+                        <History className='w-12 h-12 text-gray-400 mx-auto mb-4' />
+                        <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-2'>
+                          Belum Ada Program
+                        </h3>
+                        <p className='text-sm text-gray-600 dark:text-gray-400 mb-4'>
+                          Saat ini belum ada program aktif. Silakan cek kembali
+                          nanti.
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
                 </div>
               </ListCardContent>
