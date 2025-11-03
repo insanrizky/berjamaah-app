@@ -161,7 +161,7 @@ export const programRouter = router({
       try {
         const [program, donationTotals] = await Promise.all([
           prisma.program.findFirst({
-            where: { 
+            where: {
               id: input.id,
               deletedAt: null, // Only get non-deleted programs
             },
@@ -255,7 +255,7 @@ export const programRouter = router({
       try {
         // Check if user is the creator of the program and it's not deleted
         const existingProgram = await prisma.program.findFirst({
-          where: { 
+          where: {
             id: input.id,
             deletedAt: null, // Only allow updates to non-deleted programs
           },
@@ -307,7 +307,7 @@ export const programRouter = router({
       try {
         // Check if user is the creator of the program and it's not already deleted
         const existingProgram = await prisma.program.findFirst({
-          where: { 
+          where: {
             id: input.id,
             deletedAt: null, // Only allow deletion of non-deleted programs
           },
@@ -361,7 +361,7 @@ export const programRouter = router({
       try {
         // Check if user is the creator of the program and it's not deleted
         const existingProgram = await prisma.program.findFirst({
-          where: { 
+          where: {
             id: input.id,
             deletedAt: null, // Only allow status updates to non-deleted programs
           },
@@ -442,12 +442,14 @@ export const programRouter = router({
             prisma.program.count({
               where: {
                 status: 'active',
+                deletedAt: null,
               },
             }),
             // Total inactive programs
             prisma.program.count({
               where: {
                 status: 'inactive',
+                deletedAt: null,
               },
             }),
             // Total unique donators (more efficient with groupBy)
