@@ -98,11 +98,11 @@ export function ProgramCard({ program, onDonationSubmit }: ProgramCardProps) {
       <Card className='border-0 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden'>
         {/* Banner Image */}
         {program.bannerImage && (
-          <div className='w-full aspect-square overflow-hidden'>
+          <div className='w-full overflow-hidden'>
             <ClickableImage
               src={getImageUrl(program.bannerImage)}
               alt={`Banner ${program.title}`}
-              className='w-full h-full object-cover'
+              className='w-full h-auto max-h-[400px] object-contain'
               onError={e => {
                 e.currentTarget.style.display = 'none';
               }}

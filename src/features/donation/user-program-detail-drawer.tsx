@@ -131,11 +131,11 @@ export function UserProgramDetailDrawer({
           <div className='px-4 pb-4 space-y-6 overflow-auto'>
             {/* Banner Image */}
             {program.bannerImage && (
-              <div className='w-full aspect-square overflow-hidden rounded-lg'>
+              <div className='w-full overflow-hidden rounded-lg'>
                 <ClickableImage
                   src={getImageUrl(program.bannerImage)}
                   alt={`Banner ${program.title}`}
-                  className='w-full h-full object-cover'
+                  className='w-full h-auto max-h-[400px] object-contain'
                   onError={e => {
                     e.currentTarget.style.display = 'none';
                   }}
@@ -145,10 +145,16 @@ export function UserProgramDetailDrawer({
 
             {/* Program Header */}
             <div className='space-y-3'>
-              <div className='flex items-start justify-between'>
-                <h1 className='text-xl font-bold text-gray-900 dark:text-white'>
-                  {program.title}
-                </h1>
+              <h1 className='text-xl font-bold text-gray-900 dark:text-white'>
+                {program.title}
+              </h1>
+              <div className='flex items-center gap-2 mt-1'>
+                <Badge
+                  variant='outline'
+                  className={`text-sm ${getCategoryColor(program.category)}`}
+                >
+                  {program.category}
+                </Badge>
                 <Badge className={`text-sm ${getStatusColor(program.status)}`}>
                   {{
                     active: 'Aktif',
@@ -157,12 +163,6 @@ export function UserProgramDetailDrawer({
                   }[program.status] || program.status}
                 </Badge>
               </div>
-              <Badge
-                variant='outline'
-                className={`text-sm ${getCategoryColor(program.category)}`}
-              >
-                {program.category}
-              </Badge>
             </div>
 
             {/* Program Description */}
