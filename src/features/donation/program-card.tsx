@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Target, Users, Eye, Heart, TrendingUp } from 'lucide-react';
+import { Target, Users, Eye, Heart, TrendingUp, Copy } from 'lucide-react';
 import { DonationDrawer } from './donation-drawer';
 import { UserProgramDetailDrawer } from './user-program-detail-drawer';
 import { formatCurrencyCompact } from '@/lib/currency-utils';
@@ -47,6 +48,26 @@ export function ProgramCard({ program, onDonationSubmit }: ProgramCardProps) {
 
   const handleViewDetails = () => {
     setIsDetailDrawerOpen(true);
+  };
+
+  const handleShare = () => {
+    if (typeof window === 'undefined') return;
+
+    const shareUrl = `${window.location.origin}/programs/${program.id}`;
+
+    if (!navigator?.clipboard?.writeText) {
+      toast.error('Clipboard tidak didukung di browser ini');
+      return;
+    }
+
+    navigator.clipboard
+      .writeText(shareUrl)
+      .then(() => {
+        toast.success('Link program berhasil disalin');
+      })
+      .catch(() => {
+        toast.error('Gagal menyalin link program');
+      });
   };
 
   const handleDonationSubmit = (programId: string, amount: string) => {
@@ -202,6 +223,15 @@ export function ProgramCard({ program, onDonationSubmit }: ProgramCardProps) {
 
             {/* Action Buttons */}
             <div className='flex gap-2'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleShare}
+                className='flex-1'
+              >
+                <Copy className='w-4 h-4 mr-1' />
+                Salin Link
+              </Button>
               <Button
                 variant='outline'
                 size='sm'
