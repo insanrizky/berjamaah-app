@@ -2,17 +2,54 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import {
+  Home,
+  User,
+  Menu,
+  FolderKanban,
+  CircleDollarSign,
+  Users,
+} from 'lucide-react';
 
 export default function BottomNavigationAdmin() {
   const pathname = usePathname();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const isActive = (href: string) => {
     return pathname === href || pathname.startsWith(href + '/');
   };
 
+  const menuItems = [
+    {
+      href: '/admin/program',
+      label: 'Program',
+      icon: FolderKanban,
+    },
+    {
+      href: '/admin/donations',
+      label: 'Donasi',
+      icon: CircleDollarSign,
+    },
+    {
+      href: '/admin/users',
+      label: 'Pengguna',
+      icon: Users,
+    },
+  ];
+
   return (
     <div className='fixed bottom-0 left-0 z-50 w-full h-16 bg-white border-t border-gray-200 dark:bg-gray-700 dark:border-gray-600'>
-      <div className='grid h-full grid-cols-5 font-medium mx-auto max-w-lg px-0 sm:max-w-xl md:max-w-2xl lg:max-w-xl xl:max-w-2xl'>
+      <div className='grid h-full grid-cols-3 font-medium mx-auto max-w-lg px-0 sm:max-w-xl md:max-w-2xl lg:max-w-xl xl:max-w-2xl'>
         {/* Home */}
         <Link
           href='/admin/home'
@@ -20,19 +57,13 @@ export default function BottomNavigationAdmin() {
             isActive('/admin/home') ? 'bg-gray-50 dark:bg-gray-800' : ''
           }`}
         >
-          <svg
-            className={`w-5 h-5 mb-2 transition-colors ${
+          <Home
+            className={`w-5 h-5 mb-1 transition-colors ${
               isActive('/admin/home')
                 ? 'text-green-600 dark:text-green-500'
                 : 'text-gray-500 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-500'
             }`}
-            aria-hidden='true'
-            xmlns='http://www.w3.org/2000/svg'
-            fill='currentColor'
-            viewBox='0 0 20 20'
-          >
-            <path d='m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z' />
-          </svg>
+          />
           <span
             className={`text-xs transition-colors ${
               isActive('/admin/home')
@@ -44,100 +75,76 @@ export default function BottomNavigationAdmin() {
           </span>
         </Link>
 
-        {/* Program */}
-        <Link
-          href='/admin/program'
-          className={`inline-flex flex-col items-center justify-center px-2 hover:bg-gray-50 dark:hover:bg-gray-800 group transition-colors ${
-            isActive('/admin/program') ? 'bg-gray-50 dark:bg-gray-800' : ''
-          }`}
-        >
-          <svg
-            className={`w-5 h-5 mb-2 transition-colors ${
-              isActive('/admin/program')
-                ? 'text-green-600 dark:text-green-500'
-                : 'text-gray-500 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-500'
-            }`}
-            aria-hidden='true'
-            xmlns='http://www.w3.org/2000/svg'
-            fill='currentColor'
-            viewBox='0 0 20 20'
-          >
-            <path d='M11.074 4 8.442.408A.95.95 0 0 0 7.014.254L2.926 4h8.148ZM9 13v-1a4 4 0 0 1 4-4h6V6a1 1 0 0 0-1-1H1a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h17a1 1 0 0 0 1-1v-2h-6a4 4 0 0 1-4-4Z' />
-            <path d='M19 10h-6a2 2 0 0 0-2 2v1a2 2 0 0 0 2 2h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1Zm-4.5 3.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2ZM12.62 4h2.78L12.539.41a1.086 1.086 0 1 0-1.7 1.352L12.62 4Z' />
-          </svg>
-          <span
-            className={`text-xs transition-colors ${
-              isActive('/admin/program')
-                ? 'text-green-600 dark:text-green-500'
-                : 'text-gray-500 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-500'
-            }`}
-          >
-            Program
-          </span>
-        </Link>
-
-        {/* Donations */}
-        <Link
-          href='/admin/donations'
-          className={`inline-flex flex-col items-center justify-center px-2 hover:bg-gray-50 dark:hover:bg-gray-800 group transition-colors ${
-            isActive('/admin/donations') ? 'bg-gray-50 dark:bg-gray-800' : ''
-          }`}
-        >
-          <svg
-            className={`w-5 h-5 mb-2 transition-colors ${
-              isActive('/admin/donations')
-                ? 'text-green-600 dark:text-green-500'
-                : 'text-gray-500 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-500'
-            }`}
-            aria-hidden='true'
-            xmlns='http://www.w3.org/2000/svg'
-            fill='currentColor'
-            viewBox='0 0 20 20'
-          >
-            <path d='M10 2a8 8 0 1 0 8 8 8.009 8.009 0 0 0-8-8Zm0 14a6 6 0 1 1 6-6 6.007 6.007 0 0 1-6 6Z' />
-            <path d='M10 6a1 1 0 0 0-1 1v2H7a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0-2h-2V7a1 1 0 0 0-1-1Z' />
-          </svg>
-          <span
-            className={`text-xs transition-colors ${
-              isActive('/admin/donations')
-                ? 'text-green-600 dark:text-green-500'
-                : 'text-gray-500 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-500'
-            }`}
-          >
-            Donasi
-          </span>
-        </Link>
-
-        {/* Users */}
-        <Link
-          href='/admin/users'
-          className={`inline-flex flex-col items-center justify-center px-2 hover:bg-gray-50 dark:hover:bg-gray-800 group transition-colors ${
-            isActive('/admin/users') ? 'bg-gray-50 dark:bg-gray-800' : ''
-          }`}
-        >
-          <svg
-            className={`w-5 h-5 mb-2 transition-colors ${
-              isActive('/admin/users')
-                ? 'text-green-600 dark:text-green-500'
-                : 'text-gray-500 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-500'
-            }`}
-            aria-hidden='true'
-            xmlns='http://www.w3.org/2000/svg'
-            fill='currentColor'
-            viewBox='0 0 20 20'
-          >
-            <path d='M7 4V2a1 1 0 0 1 2 0v2a1 1 0 0 1 0 2 1 1 0 0 1-2 0V4ZM5.5 8a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM10 8a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM14.5 8a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM2 15.5A2.5 2.5 0 0 1 4.5 13h2A2.5 2.5 0 0 1 9 15.5V16a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-.5ZM11 15.5A2.5 2.5 0 0 1 13.5 13h2a2.5 2.5 0 0 1 2.5 2.5V16a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-.5Z' />
-          </svg>
-          <span
-            className={`text-xs transition-colors ${
-              isActive('/admin/users')
-                ? 'text-green-600 dark:text-green-500'
-                : 'text-gray-500 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-500'
-            }`}
-          >
-            Pengguna
-          </span>
-        </Link>
+        {/* More Menu */}
+        <Drawer open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+          <DrawerTrigger asChild>
+            <button
+              className={`inline-flex flex-col items-center justify-center px-2 hover:bg-gray-50 dark:hover:bg-gray-800 group transition-colors ${
+                menuItems.some(item => isActive(item.href))
+                  ? 'bg-gray-50 dark:bg-gray-800'
+                  : ''
+              }`}
+            >
+              <Menu
+                className={`w-5 h-5 mb-1 transition-colors ${
+                  menuItems.some(item => isActive(item.href))
+                    ? 'text-green-600 dark:text-green-500'
+                    : 'text-gray-500 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-500'
+                }`}
+              />
+              <span
+                className={`text-xs transition-colors ${
+                  menuItems.some(item => isActive(item.href))
+                    ? 'text-green-600 dark:text-green-500'
+                    : 'text-gray-500 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-500'
+                }`}
+              >
+                Menu
+              </span>
+            </button>
+          </DrawerTrigger>
+          <DrawerContent>
+            <div className='mx-auto w-full max-w-md'>
+              <DrawerHeader>
+                <DrawerTitle>Menu</DrawerTitle>
+                <DrawerDescription>
+                  Pilih menu yang ingin Anda akses
+                </DrawerDescription>
+              </DrawerHeader>
+              <div className='px-4 pb-4 space-y-2'>
+                {menuItems.map(item => {
+                  const Icon = item.icon;
+                  const active = isActive(item.href);
+                  return (
+                    <DrawerClose key={item.href} asChild>
+                      <Link
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        href={item.href as any}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                          active
+                            ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        <Icon
+                          className={`w-5 h-5 ${
+                            active
+                              ? 'text-green-600 dark:text-green-500'
+                              : 'text-gray-500 dark:text-gray-400'
+                          }`}
+                        />
+                        <span className='font-medium'>{item.label}</span>
+                        {active && (
+                          <div className='ml-auto w-2 h-2 rounded-full bg-green-600 dark:bg-green-500' />
+                        )}
+                      </Link>
+                    </DrawerClose>
+                  );
+                })}
+              </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
 
         {/* Profile */}
         <Link
@@ -146,19 +153,13 @@ export default function BottomNavigationAdmin() {
             isActive('/admin/profile') ? 'bg-gray-50 dark:bg-gray-800' : ''
           }`}
         >
-          <svg
-            className={`w-5 h-5 mb-2 transition-colors ${
+          <User
+            className={`w-5 h-5 mb-1 transition-colors ${
               isActive('/admin/profile')
                 ? 'text-green-600 dark:text-green-500'
                 : 'text-gray-500 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-500'
             }`}
-            aria-hidden='true'
-            xmlns='http://www.w3.org/2000/svg'
-            fill='currentColor'
-            viewBox='0 0 20 20'
-          >
-            <path d='M10 0a10 10 0 1 0 10 10A10.011 10.011 0 0 0 10 0Zm0 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 13a8.949 8.949 0 0 1-4.951-1.488A3.987 3.987 0 0 1 9 13h2a3.987 3.987 0 0 1 3.951 3.512A8.949 8.949 0 0 1 10 18Z' />
-          </svg>
+          />
           <span
             className={`text-xs transition-colors ${
               isActive('/admin/profile')
