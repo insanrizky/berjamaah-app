@@ -112,3 +112,18 @@ model UserBankAccount {
   @@index([deletedAt])
   @@map("user_bank_accounts")
 }
+
+model Report {
+  id          String    @id @default(cuid())
+  title       String
+  description String?   @db.Text
+  tags        String[]  @default([])
+  fileUrl     String    @map("file_url")
+  deletedAt   DateTime? @map("deleted_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([deletedAt])
+  @@index([createdAt])
+  @@map("reports")
+}

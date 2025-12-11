@@ -19,6 +19,7 @@ import {
   FolderKanban,
   CircleDollarSign,
   Users,
+  FileText,
 } from 'lucide-react';
 
 export default function BottomNavigationAdmin() {
@@ -44,6 +45,11 @@ export default function BottomNavigationAdmin() {
       href: '/admin/users',
       label: 'Pengguna',
       icon: Users,
+    },
+    {
+      href: '/admin/report',
+      label: 'Laporan',
+      icon: FileText,
     },
   ];
 

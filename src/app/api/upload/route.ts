@@ -20,14 +20,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    // Validate file type based on folder
+    const imageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const documentTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ];
+    
+    const allowedTypes = folder === 'reports' 
+      ? [...imageTypes, ...documentTypes]
+      : imageTypes;
+    
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json({ error: 'Invalid file type' }, { status: 400 });
     }
 
-    // Validate file size (5MB max)
-    const maxSize = 5 * 1024 * 1024;
+    // Validate file size (10MB max for reports, 5MB for images)
+    const maxSize = folder === 'reports' ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
     if (file.size > maxSize) {
       return NextResponse.json({ error: 'File too large' }, { status: 400 });
     }
@@ -36,7 +48,8 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 15);
     const fileExtension = file.name.split('.').pop();
-    const fileName = `${folder.replace(/\/$/, '')}/banner-${timestamp}-${randomString}.${fileExtension}`;
+    const prefix = folder === 'reports' ? 'report' : 'banner';
+    const fileName = `${folder.replace(/\/$/, '')}/${prefix}-${timestamp}-${randomString}.${fileExtension}`;
 
     // Convert file to buffer
     const buffer = Buffer.from(await file.arrayBuffer());
