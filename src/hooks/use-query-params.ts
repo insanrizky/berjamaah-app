@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 export function useQueryParam<T>(
   paramKey: string,
@@ -43,7 +43,6 @@ export function useQueryParams<T extends Record<string, unknown>>(
   defaults: QueryParams<T>
 ) {
   const searchParams = useSearchParams();
-  const router = useRouter();
   // Extract only relevant query params based on the provided default object
   const filteredParams = Object.keys(defaults).reduce((acc, key) => {
     const value = searchParams.get(key);
@@ -96,7 +95,7 @@ export function useQueryParams<T extends Record<string, unknown>>(
 
     const newSearch = params.toString();
     const newUrl = `${window.location.pathname}${newSearch ? `?${newSearch}` : ''}`;
-    router.replace(newUrl, { scroll: false });
+    window.history.replaceState({}, '', newUrl);
   };
 
   // Initialize missing defaults in the URL (skip empty arrays and empty strings)
