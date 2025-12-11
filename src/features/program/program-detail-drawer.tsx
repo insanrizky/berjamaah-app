@@ -40,6 +40,7 @@ import {
   FileText,
   TrendingUp,
   Shield,
+  Copy,
 } from 'lucide-react';
 
 interface Program {
@@ -219,6 +220,26 @@ export function ProgramDetailDrawer({
     if (program) {
       updateStatusMutation.mutate({ programId: program.id, status: newStatus });
     }
+  };
+
+  const handleShare = () => {
+    if (typeof window === 'undefined' || !program) return;
+
+    const shareUrl = `${window.location.origin}/programs/${program.id}`;
+
+    if (!navigator?.clipboard?.writeText) {
+      toast.error('Clipboard tidak didukung di browser ini');
+      return;
+    }
+
+    navigator.clipboard
+      .writeText(shareUrl)
+      .then(() => {
+        toast.success('Link program berhasil disalin');
+      })
+      .catch(() => {
+        toast.error('Gagal menyalin link program');
+      });
   };
 
   const handleEditField = (fieldName: string) => {
@@ -1006,6 +1027,22 @@ export function ProgramDetailDrawer({
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Share Link Action */}
+            <div className='space-y-2 mb-4'>
+              <p className='text-sm text-gray-600 dark:text-gray-400 mb-2'>
+                Bagikan Program
+              </p>
+              <Button
+                variant='outline'
+                size='sm'
+                className='w-full'
+                onClick={handleShare}
+              >
+                <Copy className='w-4 h-4 mr-2' />
+                Salin Link
+              </Button>
+            </div>
+
             {/* Status Actions */}
             {getAvailableStatusActions(program.status).length > 0 && (
               <div className='space-y-2 mb-4'>

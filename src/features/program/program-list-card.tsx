@@ -11,10 +11,12 @@ import {
 } from '@/components/shared/list-card';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, Copy } from 'lucide-react';
 import { formatCurrencyCompact } from '@/lib/currency-utils';
 import { getImageUrl } from '@/utils/image-url';
 import { ClickableImage } from '@/components/shared/image-preview';
+import { toast } from 'sonner';
 
 // Types for program data
 interface Program {
@@ -117,6 +119,28 @@ export function ProgramListCard({
     return formatCurrencyCompact(amount);
   };
 
+  const handleShare = (programId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+
+    if (typeof window === 'undefined') return;
+
+    const shareUrl = `${window.location.origin}/programs/${programId}`;
+
+    if (!navigator?.clipboard?.writeText) {
+      toast.error('Clipboard tidak didukung di browser ini');
+      return;
+    }
+
+    navigator.clipboard
+      .writeText(shareUrl)
+      .then(() => {
+        toast.success('Link program berhasil disalin');
+      })
+      .catch(() => {
+        toast.error('Gagal menyalin link program');
+      });
+  };
+
   return (
     <div className={className}>
       <ListCard onLoadMore={programs.length > 0 ? handleLoadMore : undefined}>
@@ -196,6 +220,19 @@ export function ProgramListCard({
                         {formatCurrency(Number(program.targetAmount) || 0)}
                       </span>
                     </div>
+                  </div>
+
+                  {/* Share Link Button */}
+                  <div className='mt-3'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      className='w-full'
+                      onClick={e => handleShare(program.id, e)}
+                    >
+                      <Copy className='w-4 h-4 mr-2' />
+                      Salin Link
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
