@@ -133,3 +133,8 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Toast positioning below header */
+[data-sonner-toaster] {
+  bottom: 72px !important;
+}

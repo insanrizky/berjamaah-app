@@ -21,7 +21,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             <ReactQueryDevtools />
           </QueryClientProvider>
         </TRPCProvider>
-        <Toaster richColors />
+        <Toaster richColors position='bottom-center' offset={72} />
       </ThemeProvider>
     </SessionProvider>
   );
