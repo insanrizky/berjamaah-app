@@ -392,11 +392,11 @@ export function ProgramDetailDrawer({
       {/* Banner Image */}
       {program.bannerImage && (
         <div className='w-full'>
-          <div className='relative aspect-square overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+          <div className='relative w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
             <ClickableImage
               src={getImageUrl(program.bannerImage)}
               alt={`Banner ${program.title}`}
-              className='w-full h-full object-cover'
+              className='w-full h-auto'
               onError={e => {
                 e.currentTarget.style.display = 'none';
               }}

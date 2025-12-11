@@ -130,11 +130,11 @@ export function ProgramListCard({
               >
                 {/* Header Image */}
                 {program.bannerImage && (
-                  <div className='w-full aspect-square overflow-hidden'>
+                  <div className='w-full overflow-hidden'>
                     <ClickableImage
                       src={getImageUrl(program.bannerImage)}
                       alt={`Banner ${program.title}`}
-                      className='w-full h-full object-cover'
+                      className='w-full h-auto'
                       onError={e => {
                         e.currentTarget.style.display = 'none';
                       }}
